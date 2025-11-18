@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Coach PI App
+          Coach PI App V2
         </p>
         <a
           className="App-link"
