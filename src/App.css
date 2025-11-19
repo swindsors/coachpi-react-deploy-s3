@@ -62,6 +62,40 @@ body {
   transform: translateY(-1px);
 }
 
+.btn-demo-mode {
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+  white-space: nowrap;
+}
+
+.btn-demo-mode:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+}
+
+.btn-demo-mode:active {
+  transform: translateY(-1px);
+}
+
+.btn-demo-mode.active {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-demo-mode.active:hover {
+  background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
 .app-header h1 {
   font-size: 2.5rem;
   margin-bottom: 10px;

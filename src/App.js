@@ -7,10 +7,12 @@ import Improve from './components/Improve';
 import Control from './components/Control';
 import AIAssistant from './components/AIAssistant/AIAssistant';
 import { downloadReport } from './utils/reportGenerator';
+import { demoData } from './utils/demoData';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [projectData, setProjectData] = useState({
     problemStatement: '',
     metrics: [],
@@ -51,6 +53,28 @@ function App() {
     }
   };
 
+  const handleToggleDemoMode = () => {
+    if (!isDemoMode) {
+      // Turning demo mode ON - load demo data
+      if (window.confirm('Load demo data? This will replace any existing data.')) {
+        setProjectData(demoData);
+        setIsDemoMode(true);
+      }
+    } else {
+      // Turning demo mode OFF - clear data
+      if (window.confirm('Turn off demo mode? This will clear all current data.')) {
+        setProjectData({
+          problemStatement: '',
+          metrics: [],
+          analysis: '',
+          improvements: [],
+          controls: []
+        });
+        setIsDemoMode(false);
+      }
+    }
+  };
+
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
@@ -60,13 +84,22 @@ function App() {
           <h1>Coach PI - Six Sigma Process Improvement</h1>
           <p className="subtitle">Guide your project through the DMAIC methodology</p>
         </div>
-        <button 
-          className="btn-download-report" 
-          onClick={handleDownloadReport}
-          title="Download your complete project report as a Word document"
-        >
-          📄 Download Report
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            className={`btn-demo-mode ${isDemoMode ? 'active' : ''}`}
+            onClick={handleToggleDemoMode}
+            title={isDemoMode ? "Turn off demo mode" : "Load sample data for demonstration"}
+          >
+            {isDemoMode ? '✓ Demo Mode ON' : '🎭 Demo Mode'}
+          </button>
+          <button 
+            className="btn-download-report" 
+            onClick={handleDownloadReport}
+            title="Download your complete project report as a Word document"
+          >
+            📄 Download Report
+          </button>
+        </div>
       </header>
 
       <div className="stepper-container">
