@@ -22,11 +22,37 @@ function App() {
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [projectData, setProjectData] = useState({
+    // Define Phase
     problemStatement: '',
+    projectName: '',
+    stakeholders: [],
+    scope: '',
+    sipocDiagrams: [],
+    
+    // Measure Phase
     metrics: [],
+    processMaps: [],
+    baselineSummary: '',
+    
+    // Analyze Phase
     analysis: '',
+    rootCauses: '',
+    dataAnalysis: '',
+    keyFindings: '',
+    fiveWhysResults: [],
+    fishboneResults: [],
+    processWastes: {},
+    wasteRootCauses: {},
+    
+    // Improve Phase
     improvements: [],
-    controls: []
+    
+    // Control Phase
+    controls: [],
+    monitoringPlan: '',
+    processOwner: '',
+    documentationPlan: '',
+    sustainmentStrategy: ''
   });
   const [currentFileName, setCurrentFileName] = useState('Untitled');
   const [savedProjectData, setSavedProjectData] = useState(null);
@@ -77,11 +103,37 @@ function App() {
       // Turning demo mode OFF - clear data
       if (window.confirm('Turn off demo mode? This will clear all current data.')) {
         setProjectData({
+          // Define Phase
           problemStatement: '',
+          projectName: '',
+          stakeholders: [],
+          scope: '',
+          sipocDiagrams: [],
+          
+          // Measure Phase
           metrics: [],
+          processMaps: [],
+          baselineSummary: '',
+          
+          // Analyze Phase
           analysis: '',
+          rootCauses: '',
+          dataAnalysis: '',
+          keyFindings: '',
+          fiveWhysResults: [],
+          fishboneResults: [],
+          processWastes: {},
+          wasteRootCauses: {},
+          
+          // Improve Phase
           improvements: [],
-          controls: []
+          
+          // Control Phase
+          controls: [],
+          monitoringPlan: '',
+          processOwner: '',
+          documentationPlan: '',
+          sustainmentStrategy: ''
         });
         setIsDemoMode(false);
       }
@@ -96,11 +148,37 @@ function App() {
       }
     }
     setProjectData({
+      // Define Phase
       problemStatement: '',
+      projectName: '',
+      stakeholders: [],
+      scope: '',
+      sipocDiagrams: [],
+      
+      // Measure Phase
       metrics: [],
+      processMaps: [],
+      baselineSummary: '',
+      
+      // Analyze Phase
       analysis: '',
+      rootCauses: '',
+      dataAnalysis: '',
+      keyFindings: '',
+      fiveWhysResults: [],
+      fishboneResults: [],
+      processWastes: {},
+      wasteRootCauses: {},
+      
+      // Improve Phase
       improvements: [],
-      controls: []
+      
+      // Control Phase
+      controls: [],
+      monitoringPlan: '',
+      processOwner: '',
+      documentationPlan: '',
+      sustainmentStrategy: ''
     });
     setCurrentFileName('Untitled');
     setSavedProjectData(null);
