@@ -268,6 +268,20 @@ export const generateReport = async (projectData) => {
               spacing: { after: 30 }
             })
           );
+
+          // Add root cause if available
+          const wasteRootCauses = projectData.wasteRootCauses || {};
+          if (wasteRootCauses[waste.id]) {
+            sections.push(
+              new Paragraph({
+                children: [
+                  new TextRun({ text: '   Root Cause: ', italics: true }),
+                  new TextRun({ text: wasteRootCauses[waste.id] })
+                ],
+                spacing: { after: 50 }
+              })
+            );
+          }
         });
 
         sections.push(new Paragraph({ text: '', spacing: { after: 50 } }));

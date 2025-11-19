@@ -11,6 +11,8 @@ function Analyze({ data, onUpdate }) {
   const [processWastes, setProcessWastes] = useState(data.processWastes || {});
   const [newWaste, setNewWaste] = useState({ description: '', severity: 'Medium' });
   const [selectedStep, setSelectedStep] = useState(null);
+  const [wasteRootCauses, setWasteRootCauses] = useState(data.wasteRootCauses || {});
+  const [editingRootCause, setEditingRootCause] = useState(null);
   
   const processMaps = data.processMaps || [];
   const allProcessSteps = processMaps.flatMap(map => 
@@ -27,9 +29,38 @@ function Analyze({ data, onUpdate }) {
       dataAnalysis,
       keyFindings,
       fiveWhysResults,
-      processWastes
+      processWastes,
+      wasteRootCauses
     });
-  }, [rootCauses, dataAnalysis, keyFindings, fiveWhysResults, processWastes]);
+  }, [rootCauses, dataAnalysis, keyFindings, fiveWhysResults, processWastes, wasteRootCauses]);
+
+  const getAllWastes = () => {
+    const allWastes = [];
+    Object.entries(processWastes).forEach(([stepKey, wastes]) => {
+      const [processName, stepId] = stepKey.split('-');
+      const step = allProcessSteps.find(s => s.id === parseInt(stepId) && s.processName === processName);
+      wastes.forEach(waste => {
+        allWastes.push({
+          ...waste,
+          stepKey,
+          stepName: step?.name || 'Unknown Step',
+          processName: step?.processName || 'Unknown Process'
+        });
+      });
+    });
+    return allWastes.sort((a, b) => {
+      const severityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+  };
+
+  const handleRootCauseUpdate = (wasteId, rootCause) => {
+    setWasteRootCauses({
+      ...wasteRootCauses,
+      [wasteId]: rootCause
+    });
+    setEditingRootCause(null);
+  };
 
   const addWaste = () => {
     if (selectedStep && newWaste.description.trim()) {
@@ -317,6 +348,154 @@ function Analyze({ data, onUpdate }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {getAllWastes().length > 0 && (
+          <div style={{ marginTop: '40px' }}>
+            <h3>Waste Root Cause Identification</h3>
+            <div className="helper-text" style={{ marginBottom: '20px' }}>
+              For each identified waste, determine the underlying root cause. Ask "Why does this waste occur?" 
+              to identify the fundamental reason that must be addressed.
+            </div>
+
+            <div style={{ marginBottom: '30px' }}>
+              {getAllWastes().map((waste) => (
+                <div key={waste.id} style={{
+                  marginBottom: '20px',
+                  padding: '20px',
+                  background: 'white',
+                  borderRadius: '12px',
+                  border: '2px solid #e0e0e0',
+                  borderLeft: `6px solid ${waste.severity === 'High' ? '#d32f2f' : waste.severity === 'Medium' ? '#f57c00' : '#388e3c'}`
+                }}>
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                          {waste.description}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                          📍 {waste.stepName} • {waste.processName}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '4px 12px',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        background: waste.severity === 'High' ? '#ffebee' : waste.severity === 'Medium' ? '#fff3e0' : '#e8f5e9',
+                        color: waste.severity === 'High' ? '#d32f2f' : waste.severity === 'Medium' ? '#f57c00' : '#388e3c'
+                      }}>
+                        {waste.severity}
+                      </div>
+                    </div>
+                  </div>
+
+                  {editingRootCause === waste.id ? (
+                    <div>
+                      <textarea
+                        className="form-control"
+                        placeholder="What is the root cause of this waste? (Why does it occur?)"
+                        value={wasteRootCauses[waste.id] || ''}
+                        onChange={(e) => setWasteRootCauses({ ...wasteRootCauses, [waste.id]: e.target.value })}
+                        rows={3}
+                        style={{ marginBottom: '10px' }}
+                        autoFocus
+                      />
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          onClick={() => handleRootCauseUpdate(waste.id, wasteRootCauses[waste.id])}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          ✓ Save
+                        </button>
+                        <button
+                          onClick={() => setEditingRootCause(null)}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#666',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {wasteRootCauses[waste.id] ? (
+                        <div style={{
+                          padding: '15px',
+                          background: '#f0f7ff',
+                          borderRadius: '8px',
+                          border: '1px solid #b3d9ff',
+                          marginBottom: '10px'
+                        }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1976d2', marginBottom: '6px' }}>
+                            🎯 Root Cause:
+                          </div>
+                          <div style={{ color: '#333', lineHeight: '1.6' }}>
+                            {wasteRootCauses[waste.id]}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          padding: '12px',
+                          background: '#fff3e0',
+                          borderRadius: '8px',
+                          border: '1px solid #ffe0b2',
+                          marginBottom: '10px',
+                          fontSize: '0.9rem',
+                          color: '#e65100'
+                        }}>
+                          ⚠️ Root cause not yet identified
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setEditingRootCause(waste.id)}
+                        style={{
+                          padding: '8px 16px',
+                          background: wasteRootCauses[waste.id] ? '#667eea' : '#ff9800',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        {wasteRootCauses[waste.id] ? '✏️ Edit Root Cause' : '🎯 Identify Root Cause'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="info-card" style={{ background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', borderLeft: '4px solid #2196f3' }}>
+              <h4 style={{ color: '#1565c0' }}>💡 Root Cause Analysis Tips</h4>
+              <ul style={{ marginBottom: '0' }}>
+                <li>Go beyond symptoms to find the underlying cause</li>
+                <li>Ask "Why?" multiple times to dig deeper</li>
+                <li>Look for systemic issues, not just individual errors</li>
+                <li>Consider people, processes, equipment, materials, environment, and management</li>
+                <li>Focus on actionable causes that can be addressed</li>
+              </ul>
             </div>
           </div>
         )}
