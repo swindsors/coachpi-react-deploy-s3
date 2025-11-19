@@ -77,6 +77,7 @@ function Measure({ data, onUpdate }) {
           <ProcessMap 
             onComplete={handleProcessMapComplete} 
             existingMap={editingMapIndex !== null ? processMaps[editingMapIndex] : null}
+            sipocDiagrams={data.sipocDiagrams || []}
           />
         )}
 

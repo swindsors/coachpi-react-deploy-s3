@@ -65,6 +65,127 @@
   cursor: not-allowed;
 }
 
+.btn-secondary-process-map {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #7e57c2 0%, #673ab7 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary-process-map:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(103, 58, 183, 0.3);
+}
+
+/* SIPOC Import Section */
+.sipoc-import-section {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-top: 20px;
+  border: 2px solid #9575cd;
+}
+
+.sipoc-import-section h4 {
+  color: #673ab7;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.sipoc-import-section .helper-text {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.sipoc-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.sipoc-import-card {
+  background: linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%);
+  border: 2px solid #ba68c8;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.sipoc-import-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(186, 104, 200, 0.3);
+  border-color: #9c27b0;
+}
+
+.sipoc-import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e1bee7;
+}
+
+.sipoc-import-header strong {
+  color: #673ab7;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.step-count-badge {
+  background: #673ab7;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sipoc-steps-preview {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #ba68c8;
+}
+
+.step-preview-item {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.step-preview-item:last-child {
+  margin-bottom: 0;
+}
+
+.btn-import {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #7e57c2 0%, #673ab7 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-import:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(103, 58, 183, 0.4);
+  background: linear-gradient(135deg, #9575cd 0%, #7e57c2 100%);
+}
+
 /* Process Map Info */
 .process-map-info {
   background: white;

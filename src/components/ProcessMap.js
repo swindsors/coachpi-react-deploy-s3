@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import './ProcessMap.css';
 
-function ProcessMap({ onComplete, existingMap }) {
+function ProcessMap({ onComplete, existingMap, sipocDiagrams }) {
   const [processName, setProcessName] = useState(existingMap?.processName || '');
   const [steps, setSteps] = useState(existingMap?.steps || []);
   const [newStep, setNewStep] = useState({ name: '', type: 'Process', description: '' });
   const [isStarted, setIsStarted] = useState(!!existingMap);
+  const [showSipocImport, setShowSipocImport] = useState(false);
+
+  const handleImportFromSipoc = (sipoc) => {
+    if (!processName) {
+      setProcessName(sipoc.processName);
+    }
+    
+    // Start with a Start step
+    const importedSteps = [{ id: Date.now(), name: 'Start', type: 'Start', description: '' }];
+    
+    // Add all SIPOC process steps as Process type steps
+    sipoc.processSteps.forEach((stepName, index) => {
+      importedSteps.push({
+        id: Date.now() + index + 1,
+        name: stepName,
+        type: 'Process',
+        description: ''
+      });
+    });
+    
+    setSteps(importedSteps);
+    setIsStarted(true);
+    setShowSipocImport(false);
+  };
 
   const stepTypes = [
     { value: 'Start', label: 'Start/End', icon: '⬭' },
@@ -90,14 +114,59 @@ function ProcessMap({ onComplete, existingMap }) {
             value={processName}
             onChange={(e) => setProcessName(e.target.value)}
           />
-          <button 
-            className="btn btn-primary-process-map" 
-            onClick={handleStart}
-            disabled={!processName.trim()}
-          >
-            Start Building Process Map
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button 
+              className="btn btn-primary-process-map" 
+              onClick={handleStart}
+              disabled={!processName.trim()}
+            >
+              Start Building Process Map
+            </button>
+            {sipocDiagrams && sipocDiagrams.length > 0 && (
+              <button 
+                className="btn btn-secondary-process-map" 
+                onClick={() => setShowSipocImport(!showSipocImport)}
+              >
+                📋 Import from SIPOC
+              </button>
+            )}
+          </div>
         </div>
+
+        {showSipocImport && sipocDiagrams && sipocDiagrams.length > 0 && (
+          <div className="sipoc-import-section">
+            <h4>Select a SIPOC Diagram to Import:</h4>
+            <p className="helper-text">The process steps from your SIPOC diagram will be imported as a starting point.</p>
+            <div className="sipoc-list">
+              {sipocDiagrams.map((sipoc, index) => (
+                <div key={index} className="sipoc-import-card">
+                  <div className="sipoc-import-header">
+                    <strong>{sipoc.processName}</strong>
+                    <span className="step-count-badge">{sipoc.processSteps?.length || 0} steps</span>
+                  </div>
+                  <div className="sipoc-steps-preview">
+                    {sipoc.processSteps?.slice(0, 3).map((step, idx) => (
+                      <div key={idx} className="step-preview-item">
+                        {idx + 1}. {step}
+                      </div>
+                    ))}
+                    {sipoc.processSteps?.length > 3 && (
+                      <div className="step-preview-item" style={{ fontStyle: 'italic', color: '#666' }}>
+                        ...and {sipoc.processSteps.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    className="btn-import" 
+                    onClick={() => handleImportFromSipoc(sipoc)}
+                  >
+                    ✓ Import This Process
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="process-map-info">
           <h4>Process Map Symbols:</h4>
