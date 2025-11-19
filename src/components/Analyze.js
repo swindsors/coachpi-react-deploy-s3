@@ -516,7 +516,14 @@ function Analyze({ data, onUpdate }) {
         <div className="tools-section">
           <strong>Common Analysis Tools:</strong>
           <div className="tools-list">
-            <span className="tool-tag">5 Whys</span>
+            <span 
+              className="tool-tag" 
+              onClick={() => setShowFiveWhys(true)} 
+              style={{ cursor: 'pointer' }}
+              title="Click to launch 5 Whys Analysis Tool"
+            >
+              5 Whys
+            </span>
             <span className="tool-tag">Fishbone Diagram</span>
             <span className="tool-tag">Pareto Analysis</span>
             <span className="tool-tag">Regression Analysis</span>
