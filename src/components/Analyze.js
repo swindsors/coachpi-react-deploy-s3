@@ -26,6 +26,17 @@ function Analyze({ data, onUpdate }) {
     }))
   );
 
+  // Sync local state with incoming data prop (for file loading)
+  useEffect(() => {
+    setRootCauses(data.rootCauses || '');
+    setDataAnalysis(data.dataAnalysis || '');
+    setKeyFindings(data.keyFindings || '');
+    setFiveWhysResults(data.fiveWhysResults || []);
+    setFishboneResults(data.fishboneResults || []);
+    setProcessWastes(data.processWastes || {});
+    setWasteRootCauses(data.wasteRootCauses || {});
+  }, [data]);
+
   useEffect(() => {
     onUpdate({
       rootCauses,

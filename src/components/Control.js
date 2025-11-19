@@ -6,6 +6,12 @@ function Control({ data, onUpdate }) {
   const [documentation, setDocumentation] = useState(data.documentation || '');
   const [newControl, setNewControl] = useState({ measure: '', frequency: '', responsible: '' });
 
+  // Sync local state with incoming data prop (for file loading)
+  useEffect(() => {
+    setControls(data.controls || []);
+    setDocumentation(data.documentation || '');
+  }, [data]);
+
   useEffect(() => {
     onUpdate({ controls, documentation });
   }, [controls, documentation]);

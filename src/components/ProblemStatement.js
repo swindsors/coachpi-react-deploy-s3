@@ -11,6 +11,15 @@ function ProblemStatement({ data, onUpdate }) {
   const [sipocDiagrams, setSipocDiagrams] = useState(data.sipocDiagrams || []);
   const [showSIPOC, setShowSIPOC] = useState(false);
 
+  // Sync local state with incoming data prop (for file loading)
+  useEffect(() => {
+    setProblemStatement(data.problemStatement || '');
+    setProjectName(data.projectName || '');
+    setStakeholders(data.stakeholders || []);
+    setScope(data.scope || '');
+    setSipocDiagrams(data.sipocDiagrams || []);
+  }, [data]);
+
   useEffect(() => {
     onUpdate({
       problemStatement,

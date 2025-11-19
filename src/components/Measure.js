@@ -9,6 +9,12 @@ function Measure({ data, onUpdate }) {
   const [showProcessMap, setShowProcessMap] = useState(false);
   const [editingMapIndex, setEditingMapIndex] = useState(null);
 
+  // Sync local state with incoming data prop (for file loading)
+  useEffect(() => {
+    setMetrics(data.metrics || []);
+    setProcessMaps(data.processMaps || []);
+  }, [data]);
+
   useEffect(() => {
     onUpdate({ metrics, processMaps });
   }, [metrics, processMaps]);

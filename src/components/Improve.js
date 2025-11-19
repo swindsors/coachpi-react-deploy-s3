@@ -12,6 +12,12 @@ function Improve({ data, onUpdate }) {
   const processMaps = data.processMaps || [];
 
   // Get all wastes with their root causes
+  // Sync local state with incoming data prop (for file loading)
+  useEffect(() => {
+    setImprovements(data.improvements || []);
+    setRootCauseSolutions(data.rootCauseSolutions || {});
+  }, [data]);
+
   const getWastesWithRootCauses = () => {
     const wastesWithRC = [];
     Object.entries(processWastes).forEach(([stepKey, wastes]) => {
