@@ -5,6 +5,7 @@ import Measure from './components/Measure';
 import Analyze from './components/Analyze';
 import Improve from './components/Improve';
 import Control from './components/Control';
+import { downloadReport } from './utils/reportGenerator';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -40,13 +41,30 @@ function App() {
     setProjectData({ ...projectData, ...data });
   };
 
+  const handleDownloadReport = async () => {
+    try {
+      await downloadReport(projectData);
+    } catch (error) {
+      alert('Error generating report. Please try again.');
+    }
+  };
+
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Coach PI - Six Sigma Process Improvement</h1>
-        <p className="subtitle">Guide your project through the DMAIC methodology</p>
+        <div>
+          <h1>Coach PI - Six Sigma Process Improvement</h1>
+          <p className="subtitle">Guide your project through the DMAIC methodology</p>
+        </div>
+        <button 
+          className="btn-download-report" 
+          onClick={handleDownloadReport}
+          title="Download your complete project report as a Word document"
+        >
+          📄 Download Report
+        </button>
       </header>
 
       <div className="stepper-container">
