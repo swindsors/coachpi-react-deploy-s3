@@ -43,6 +43,21 @@ function FiveWhys({ onComplete }) {
     }
   };
 
+  const handleMarkAsRootCause = (index) => {
+    const selectedWhy = whys[index];
+    setRootCause(selectedWhy);
+    setTimeout(() => {
+      const result = {
+        problem,
+        whys: whys.slice(0, index + 1).filter(w => w.trim() !== ''),
+        rootCause: selectedWhy
+      };
+      if (onComplete) {
+        onComplete(result);
+      }
+    }, 100);
+  };
+
   const handleReset = () => {
     setProblem('');
     setWhys(['', '', '', '', '']);
@@ -199,7 +214,30 @@ function FiveWhys({ onComplete }) {
             why.trim() && (
               <div key={index} className="summary-item">
                 <div className="arrow">↓</div>
-                <strong>Why #{index + 1}:</strong> {why}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ flex: 1 }}>
+                    <strong>Why #{index + 1}:</strong> {why}
+                  </div>
+                  {!rootCause && index <= currentWhy && (
+                    <button
+                      onClick={() => handleMarkAsRootCause(index)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#4caf50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}
+                      title="Mark this as the root cause and complete the analysis"
+                    >
+                      🎯 Mark as Root Cause
+                    </button>
+                  )}
+                </div>
               </div>
             )
           )}
