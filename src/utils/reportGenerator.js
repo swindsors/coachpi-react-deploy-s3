@@ -45,11 +45,30 @@ export const generateReport = async (projectData) => {
       text: 'Key Stakeholders',
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 200, after: 100 }
-    }),
-    new Paragraph({
-      text: projectData.stakeholders || 'Not provided',
-      spacing: { after: 200 }
-    }),
+    })
+  );
+
+  if (projectData.stakeholders && projectData.stakeholders.length > 0) {
+    projectData.stakeholders.forEach((stakeholder) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${stakeholder.name}`, bold: true }),
+            new TextRun({ text: ` (${stakeholder.raci})` })
+          ],
+          spacing: { after: 50 }
+        }),
+        new Paragraph({
+          text: `   Email: ${stakeholder.email}`,
+          spacing: { after: 100 }
+        })
+      );
+    });
+  } else {
+    sections.push(new Paragraph({ text: 'No stakeholders defined', spacing: { after: 200 } }));
+  }
+
+  sections.push(
     new Paragraph({
       text: 'Project Scope',
       heading: HeadingLevel.HEADING_2,

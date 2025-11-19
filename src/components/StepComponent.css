@@ -440,16 +440,100 @@
   font-size: 1.1rem;
 }
 
+/* Stakeholder Components */
+.stakeholder-input-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr auto;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stakeholders-list {
+  margin-top: 20px;
+}
+
+.stakeholders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.stakeholder-card {
+  background: linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #ce93d8;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.stakeholder-card:hover {
+  border-color: #ab47bc;
+  box-shadow: 0 5px 20px rgba(171, 71, 188, 0.2);
+  transform: translateY(-2px);
+}
+
+.stakeholder-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 8px;
+  padding-right: 25px;
+}
+
+.stakeholder-email {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+
+.stakeholder-raci {
+  margin-top: 10px;
+}
+
+.raci-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.raci-responsible {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.raci-accountable {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+.raci-consulted {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+.raci-informed {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .metric-input-row,
   .improvement-meta,
-  .control-input-section {
+  .control-input-section,
+  .stakeholder-input-row {
     grid-template-columns: 1fr;
   }
 
   .metrics-grid,
-  .controls-grid {
+  .controls-grid,
+  .stakeholders-grid {
     grid-template-columns: 1fr;
   }
 

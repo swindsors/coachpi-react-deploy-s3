@@ -5,7 +5,8 @@ import SIPOC from './SIPOC';
 function ProblemStatement({ data, onUpdate }) {
   const [problemStatement, setProblemStatement] = useState(data.problemStatement || '');
   const [projectName, setProjectName] = useState(data.projectName || '');
-  const [stakeholders, setStakeholders] = useState(data.stakeholders || '');
+  const [stakeholders, setStakeholders] = useState(data.stakeholders || []);
+  const [newStakeholder, setNewStakeholder] = useState({ name: '', email: '', raci: 'Informed' });
   const [scope, setScope] = useState(data.scope || '');
   const [sipocDiagrams, setSipocDiagrams] = useState(data.sipocDiagrams || []);
   const [showSIPOC, setShowSIPOC] = useState(false);
@@ -121,15 +122,72 @@ function ProblemStatement({ data, onUpdate }) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="stakeholders">Key Stakeholders</label>
-          <textarea
-            id="stakeholders"
-            className="form-control"
-            placeholder="List the key stakeholders involved or affected by this problem"
-            value={stakeholders}
-            onChange={(e) => setStakeholders(e.target.value)}
-            rows={3}
-          />
+          <label>Key Stakeholders</label>
+          <div className="helper-text" style={{ marginBottom: '15px' }}>
+            <strong>RACI Matrix:</strong> Responsible (does the work), Accountable (final approval), Consulted (provides input), Informed (kept updated)
+          </div>
+          <div className="stakeholder-input-row">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Stakeholder Name"
+              value={newStakeholder.name}
+              onChange={(e) => setNewStakeholder({ ...newStakeholder, name: e.target.value })}
+            />
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Email Address"
+              value={newStakeholder.email}
+              onChange={(e) => setNewStakeholder({ ...newStakeholder, email: e.target.value })}
+            />
+            <select
+              className="form-control"
+              value={newStakeholder.raci}
+              onChange={(e) => setNewStakeholder({ ...newStakeholder, raci: e.target.value })}
+            >
+              <option value="Responsible">Responsible</option>
+              <option value="Accountable">Accountable</option>
+              <option value="Consulted">Consulted</option>
+              <option value="Informed">Informed</option>
+            </select>
+            <button 
+              className="btn-add" 
+              onClick={() => {
+                if (newStakeholder.name.trim()) {
+                  setStakeholders([...stakeholders, { ...newStakeholder, id: Date.now() }]);
+                  setNewStakeholder({ name: '', email: '', raci: 'Informed' });
+                }
+              }}
+            >
+              + Add
+            </button>
+          </div>
+
+          {stakeholders.length > 0 && (
+            <div className="stakeholders-list">
+              <h4 style={{ marginTop: '20px', marginBottom: '15px' }}>Project Stakeholders</h4>
+              <div className="stakeholders-grid">
+                {stakeholders.map((stakeholder) => (
+                  <div key={stakeholder.id} className="stakeholder-card">
+                    <button 
+                      className="remove-btn" 
+                      onClick={() => setStakeholders(stakeholders.filter(s => s.id !== stakeholder.id))}
+                    >
+                      ×
+                    </button>
+                    <div className="stakeholder-name">{stakeholder.name}</div>
+                    <div className="stakeholder-email">{stakeholder.email}</div>
+                    <div className="stakeholder-raci">
+                      <span className={`raci-badge raci-${stakeholder.raci.toLowerCase()}`}>
+                        {stakeholder.raci}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-group">
