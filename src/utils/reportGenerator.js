@@ -222,7 +222,60 @@ export const generateReport = async (projectData) => {
     new Paragraph({
       text: projectData.dataAnalysis || 'Not provided',
       spacing: { after: 200 }
-    }),
+    })
+  );
+
+  // Process Waste Analysis
+  if (projectData.processWastes && Object.keys(projectData.processWastes).length > 0) {
+    sections.push(
+      new Paragraph({
+        text: 'Process Waste Analysis',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 }
+      })
+    );
+
+    const processMaps = projectData.processMaps || [];
+    const allSteps = processMaps.flatMap(map => 
+      map.steps.map(step => ({
+        ...step,
+        processName: map.processName,
+        stepKey: `${map.processName}-${step.id}`
+      }))
+    );
+
+    allSteps.forEach(step => {
+      const wastes = projectData.processWastes[step.stepKey];
+      if (wastes && wastes.length > 0) {
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `${step.name}`, bold: true }),
+              new TextRun({ text: ` (${step.processName})` })
+            ],
+            spacing: { before: 100, after: 50 }
+          })
+        );
+
+        wastes.forEach((waste, idx) => {
+          sections.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${idx + 1}. `, bold: true }),
+                new TextRun({ text: waste.description }),
+                new TextRun({ text: ` [${waste.severity} Priority]`, italics: true, color: waste.severity === 'High' ? 'D32F2F' : waste.severity === 'Medium' ? 'F57C00' : '388E3C' })
+              ],
+              spacing: { after: 30 }
+            })
+          );
+        });
+
+        sections.push(new Paragraph({ text: '', spacing: { after: 50 } }));
+      }
+    });
+  }
+
+  sections.push(
     new Paragraph({
       text: 'Root Causes Identified',
       heading: HeadingLevel.HEADING_2,
