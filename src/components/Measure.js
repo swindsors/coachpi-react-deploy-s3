@@ -7,14 +7,40 @@ function Measure({ data, onUpdate }) {
   const [newMetric, setNewMetric] = useState({ name: '', baseline: '', target: '', unit: '', type: 'Primary' });
   const [processMaps, setProcessMaps] = useState(data.processMaps || []);
   const [showProcessMap, setShowProcessMap] = useState(false);
+  const [editingMapIndex, setEditingMapIndex] = useState(null);
 
   useEffect(() => {
     onUpdate({ metrics, processMaps });
   }, [metrics, processMaps]);
 
   const handleProcessMapComplete = (processMapData) => {
-    setProcessMaps([...processMaps, processMapData]);
+    if (editingMapIndex !== null) {
+      // Update existing map
+      const updatedMaps = [...processMaps];
+      updatedMaps[editingMapIndex] = processMapData;
+      setProcessMaps(updatedMaps);
+      setEditingMapIndex(null);
+    } else {
+      // Add new map
+      setProcessMaps([...processMaps, processMapData]);
+    }
     setShowProcessMap(false);
+  };
+
+  const handleEditMap = (index) => {
+    setEditingMapIndex(index);
+    setShowProcessMap(true);
+  };
+
+  const handleDeleteMap = (index) => {
+    if (window.confirm('Are you sure you want to delete this process map? This action cannot be undone.')) {
+      setProcessMaps(processMaps.filter((_, idx) => idx !== index));
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowProcessMap(false);
+    setEditingMapIndex(null);
   };
 
   const addMetric = () => {
@@ -48,15 +74,52 @@ function Measure({ data, onUpdate }) {
         </button>
 
         {showProcessMap && (
-          <ProcessMap onComplete={handleProcessMapComplete} />
+          <ProcessMap 
+            onComplete={handleProcessMapComplete} 
+            existingMap={editingMapIndex !== null ? processMaps[editingMapIndex] : null}
+          />
         )}
 
         {processMaps.length > 0 && (
           <div className="info-card" style={{ background: 'linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%)', borderLeft: '4px solid #5c6bc0', marginBottom: '20px' }}>
             <h4 style={{ color: '#3f51b5' }}>✓ Completed Process Maps: {processMaps.length}</h4>
             {processMaps.map((map, idx) => (
-              <div key={idx} style={{ marginTop: '15px', padding: '15px', background: 'white', borderRadius: '8px' }}>
-                <strong style={{ color: '#3f51b5', fontSize: '1.1rem' }}>{map.processName}</strong>
+              <div key={idx} style={{ marginTop: '15px', padding: '15px', background: 'white', borderRadius: '8px', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <strong style={{ color: '#3f51b5', fontSize: '1.1rem' }}>{map.processName}</strong>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => handleEditMap(idx)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteMap(idx)}
+                      style={{
+                        padding: '6px 12px',
+                        background: '#ff5252',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
                 <div style={{ marginTop: '10px' }}>
                   {map.steps.map((step, stepIdx) => (
                     <div key={stepIdx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>

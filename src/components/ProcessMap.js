@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import './ProcessMap.css';
 
-function ProcessMap({ onComplete }) {
-  const [processName, setProcessName] = useState('');
-  const [steps, setSteps] = useState([]);
+function ProcessMap({ onComplete, existingMap }) {
+  const [processName, setProcessName] = useState(existingMap?.processName || '');
+  const [steps, setSteps] = useState(existingMap?.steps || []);
   const [newStep, setNewStep] = useState({ name: '', type: 'Process', description: '' });
-  const [isStarted, setIsStarted] = useState(false);
+  const [isStarted, setIsStarted] = useState(!!existingMap);
 
   const stepTypes = [
     { value: 'Start', label: 'Start/End', icon: '⬭' },
