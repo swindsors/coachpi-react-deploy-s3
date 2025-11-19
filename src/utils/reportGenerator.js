@@ -1,4 +1,4 @@
-import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, Packer } from 'docx';
 import { saveAs } from 'file-saver';
 
 export const generateReport = async (projectData) => {
@@ -320,7 +320,7 @@ export const generateReport = async (projectData) => {
 export const downloadReport = async (projectData) => {
   try {
     const doc = await generateReport(projectData);
-    const blob = await doc.generate();
+    const blob = await Packer.toBlob(doc);
     const fileName = `${projectData.projectName || 'DMAIC-Project'}_Report_${new Date().toISOString().split('T')[0]}.docx`;
     saveAs(blob, fileName);
   } catch (error) {
