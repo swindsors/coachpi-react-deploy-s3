@@ -1,0 +1,306 @@
+/* SIPOC Container */
+.sipoc-container {
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  padding: 30px;
+  border-radius: 15px;
+  border: 3px solid #2196f3;
+  margin: 30px 0;
+}
+
+.sipoc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #64b5f6;
+}
+
+.sipoc-header h3 {
+  color: #1976d2;
+  font-size: 1.5rem;
+  margin: 0 0 8px 0;
+}
+
+.sipoc-description {
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 800px;
+}
+
+/* Process Name Section */
+.process-name-section {
+  margin-bottom: 30px;
+}
+
+.process-name-section label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.btn-primary-sipoc {
+  margin-top: 15px;
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-sipoc:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+}
+
+.btn-primary-sipoc:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* SIPOC Example/Definitions */
+.sipoc-example {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  border-left: 4px solid #2196f3;
+  margin-top: 20px;
+}
+
+.sipoc-example strong {
+  color: #1976d2;
+  font-size: 1.2rem;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.sipoc-definitions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.def-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.def-item:hover {
+  background: #e3f2fd;
+  transform: translateX(5px);
+}
+
+.def-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.def-item strong {
+  color: #1976d2;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.example-text {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+/* SIPOC Grid */
+.sipoc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.sipoc-column {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.process-column {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+  border-color: #ff9800;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.column-icon {
+  font-size: 1.5rem;
+}
+
+.column-header h4 {
+  margin: 0;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.suppliers-header {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+}
+
+.inputs-header {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+.process-header {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+
+.outputs-header {
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+}
+
+.customers-header {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.column-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  font-style: italic;
+}
+
+/* Input Rows */
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.input-row .form-control {
+  flex: 1;
+  padding: 10px;
+  font-size: 0.95rem;
+}
+
+.btn-remove-small {
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-remove-small:hover {
+  background: #d32f2f;
+  transform: scale(1.1);
+}
+
+.btn-add-small {
+  padding: 8px 12px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: auto;
+  transition: all 0.3s ease;
+}
+
+.btn-add-small:hover {
+  background: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+/* Actions */
+.sipoc-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.btn-complete-sipoc {
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-complete-sipoc:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+.btn-complete-sipoc:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .sipoc-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .sipoc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .sipoc-container {
+    padding: 20px;
+  }
+
+  .sipoc-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .sipoc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .def-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .def-icon {
+    font-size: 2.5rem;
+  }
+}
