@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './StepComponent.css';
 import FiveWhys from './FiveWhys';
+import Fishbone from './Fishbone';
 
 function Analyze({ data, onUpdate }) {
   const [rootCauses, setRootCauses] = useState(data.rootCauses || '');
@@ -8,6 +9,8 @@ function Analyze({ data, onUpdate }) {
   const [keyFindings, setKeyFindings] = useState(data.keyFindings || '');
   const [fiveWhysResults, setFiveWhysResults] = useState(data.fiveWhysResults || []);
   const [showFiveWhys, setShowFiveWhys] = useState(false);
+  const [fishboneResults, setFishboneResults] = useState(data.fishboneResults || []);
+  const [showFishbone, setShowFishbone] = useState(false);
   const [processWastes, setProcessWastes] = useState(data.processWastes || {});
   const [newWaste, setNewWaste] = useState({ description: '', severity: 'Medium' });
   const [selectedStep, setSelectedStep] = useState(null);
@@ -29,10 +32,11 @@ function Analyze({ data, onUpdate }) {
       dataAnalysis,
       keyFindings,
       fiveWhysResults,
+      fishboneResults,
       processWastes,
       wasteRootCauses
     });
-  }, [rootCauses, dataAnalysis, keyFindings, fiveWhysResults, processWastes, wasteRootCauses]);
+  }, [rootCauses, dataAnalysis, keyFindings, fiveWhysResults, fishboneResults, processWastes, wasteRootCauses]);
 
   const getAllWastes = () => {
     const allWastes = [];
@@ -109,6 +113,20 @@ function Analyze({ data, onUpdate }) {
     }
   };
 
+  const handleFishboneComplete = (result) => {
+    setFishboneResults([...fishboneResults, result]);
+    setShowFishbone(false);
+    
+    // Auto-populate root causes field if empty or append to it
+    if (!rootCauses) {
+      const categoriesText = Object.entries(result.categories)
+        .filter(([_, cat]) => cat.causes.length > 0)
+        .map(([key, cat]) => `${cat.name}:\n${cat.causes.map(c => `  - ${c}`).join('\n')}`)
+        .join('\n\n');
+      setRootCauses(`Problem: ${result.problem}\n\n${categoriesText}\n\nRoot Cause: ${result.rootCause || '(To be determined)'}`);
+    }
+  };
+
   return (
     <div className="step-component">
       <div className="step-header">
@@ -140,6 +158,31 @@ function Analyze({ data, onUpdate }) {
                 <strong>Analysis {idx + 1}:</strong> {result.problem}
                 <br />
                 <strong style={{ color: '#2e7d32' }}>Root Cause:</strong> {result.rootCause}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button 
+          className="btn-add" 
+          onClick={() => setShowFishbone(!showFishbone)}
+          style={{ marginBottom: '20px' }}
+        >
+          {showFishbone ? '✕ Close Fishbone Tool' : '🐟 Launch Fishbone Diagram Tool'}
+        </button>
+
+        {showFishbone && (
+          <Fishbone onComplete={handleFishboneComplete} />
+        )}
+
+        {fishboneResults.length > 0 && (
+          <div className="info-card" style={{ background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)', borderLeft: '4px solid #9c27b0', marginBottom: '20px' }}>
+            <h4 style={{ color: '#6a1b9a' }}>✓ Completed Fishbone Analyses: {fishboneResults.length}</h4>
+            {fishboneResults.map((result, idx) => (
+              <div key={idx} style={{ marginTop: '10px', padding: '10px', background: 'white', borderRadius: '8px' }}>
+                <strong>Analysis {idx + 1}:</strong> {result.problem}
+                <br />
+                <strong style={{ color: '#6a1b9a' }}>Root Cause:</strong> {result.rootCause || '(To be determined)'}
               </div>
             ))}
           </div>
@@ -524,7 +567,14 @@ function Analyze({ data, onUpdate }) {
             >
               5 Whys
             </span>
-            <span className="tool-tag">Fishbone Diagram</span>
+            <span 
+              className="tool-tag"
+              onClick={() => setShowFishbone(true)}
+              style={{ cursor: 'pointer' }}
+              title="Click to launch Fishbone Diagram Tool"
+            >
+              Fishbone Diagram
+            </span>
             <span className="tool-tag">Pareto Analysis</span>
             <span className="tool-tag">Regression Analysis</span>
           </div>
