@@ -197,14 +197,15 @@ function App() {
     try {
       const { fileName, projectData: loadedData } = await openProjectFromFile();
       
-      // Store loaded data in sessionStorage before refresh
-      sessionStorage.setItem('loadedProject', JSON.stringify({
-        fileName: fileName,
-        projectData: loadedData
-      }));
+      // Load the data directly without page refresh
+      setProjectData(loadedData);
+      setCurrentFileName(fileName);
+      setSavedProjectData(loadedData);
+      setIsDemoMode(false);
+      setShowFileMenu(false);
+      setCurrentStep(0); // Reset to first step to show loaded data
       
-      // Refresh the page to ensure all components re-render with new data
-      window.location.reload();
+      alert(`Project "${fileName}" loaded successfully!`);
     } catch (error) {
       if (error.message !== 'No file selected') {
         alert(error.message);
@@ -292,26 +293,8 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [projectData, savedProjectData, currentFileName]);
 
-  // Check for loaded project from sessionStorage (after page refresh)
+  // Check for auto-save backup on mount
   useEffect(() => {
-    const loadedProject = sessionStorage.getItem('loadedProject');
-    if (loadedProject) {
-      try {
-        const { fileName, projectData: loadedData } = JSON.parse(loadedProject);
-        setProjectData(loadedData);
-        setCurrentFileName(fileName);
-        setSavedProjectData(loadedData);
-        setIsDemoMode(false);
-        // Clear the sessionStorage after loading
-        sessionStorage.removeItem('loadedProject');
-      } catch (error) {
-        console.error('Error loading project from sessionStorage:', error);
-        sessionStorage.removeItem('loadedProject');
-      }
-      return; // Skip auto-save check if we just loaded a project
-    }
-
-    // Check for auto-save backup on mount
     const backup = getAutoSaveBackup();
     if (backup && backup.projectData) {
       const timeSinceBackup = Date.now() - new Date(backup.timestamp).getTime();
