@@ -197,6 +197,59 @@ body {
   background: #d0d0d0;
 }
 
+/* AI Assistant Toggle Button */
+.ai-assistant-toggle {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  z-index: 999;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 35px rgba(102, 126, 234, 0.6);
+  }
+}
+
+.ai-assistant-toggle:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+}
+
+.ai-assistant-toggle:active {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.toggle-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.toggle-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .app-header h1 {
@@ -227,5 +280,20 @@ body {
 
   .btn {
     max-width: none;
+  }
+
+  .ai-assistant-toggle {
+    width: 60px;
+    height: 60px;
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .toggle-icon {
+    font-size: 1.6rem;
+  }
+
+  .toggle-text {
+    font-size: 0.55rem;
   }
 }

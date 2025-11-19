@@ -5,10 +5,12 @@ import Measure from './components/Measure';
 import Analyze from './components/Analyze';
 import Improve from './components/Improve';
 import Control from './components/Control';
+import AIAssistant from './components/AIAssistant/AIAssistant';
 import { downloadReport } from './utils/reportGenerator';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [projectData, setProjectData] = useState({
     problemStatement: '',
     metrics: [],
@@ -102,6 +104,24 @@ function App() {
           Next
         </button>
       </div>
+
+      {/* AI Assistant Toggle Button */}
+      <button 
+        className="ai-assistant-toggle"
+        onClick={() => setIsAIAssistantOpen(true)}
+        title="Open AI Assistant"
+      >
+        <span className="toggle-icon">🤖</span>
+        <span className="toggle-text">AI Assistant</span>
+      </button>
+
+      {/* AI Assistant Sidebar */}
+      <AIAssistant
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
+        projectData={projectData}
+        currentPhase={steps[currentStep].name.toLowerCase()}
+      />
     </div>
   );
 }
