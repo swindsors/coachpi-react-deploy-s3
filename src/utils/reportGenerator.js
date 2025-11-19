@@ -151,8 +151,9 @@ export const generateReport = async (projectData) => {
       sections.push(
         new Paragraph({
           children: [
-            new TextRun({ text: `${index + 1}. ${metric.name}: `, bold: true }),
-            new TextRun({ text: `Baseline: ${metric.baseline} ${metric.unit}, Target: ${metric.target} ${metric.unit}` })
+            new TextRun({ text: `${index + 1}. ${metric.name}`, bold: true }),
+            new TextRun({ text: ` (${metric.type || 'Primary'})`, italics: true }),
+            new TextRun({ text: `: Baseline: ${metric.baseline} ${metric.unit}, Target: ${metric.target} ${metric.unit}` })
           ],
           spacing: { after: 100 }
         })

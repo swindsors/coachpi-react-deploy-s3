@@ -3,7 +3,7 @@ import './StepComponent.css';
 
 function Measure({ data, onUpdate }) {
   const [metrics, setMetrics] = useState(data.metrics || []);
-  const [newMetric, setNewMetric] = useState({ name: '', baseline: '', target: '', unit: '' });
+  const [newMetric, setNewMetric] = useState({ name: '', baseline: '', target: '', unit: '', type: 'Primary' });
 
   useEffect(() => {
     onUpdate({ metrics });
@@ -12,7 +12,7 @@ function Measure({ data, onUpdate }) {
   const addMetric = () => {
     if (newMetric.name && newMetric.baseline) {
       setMetrics([...metrics, { ...newMetric, id: Date.now() }]);
-      setNewMetric({ name: '', baseline: '', target: '', unit: '' });
+      setNewMetric({ name: '', baseline: '', target: '', unit: '', type: 'Primary' });
     }
   };
 
@@ -32,7 +32,11 @@ function Measure({ data, onUpdate }) {
 
       <div className="form-section">
         <h3>Add Metrics to Track</h3>
-        <div className="metric-input-row">
+        <div className="helper-text" style={{ marginBottom: '15px' }}>
+          <strong>Metric Types:</strong> Primary metrics directly measure your project goal (e.g., defect rate, cycle time). 
+          Secondary metrics track related factors that may influence the primary metric (e.g., training hours, supplier quality).
+        </div>
+        <div className="metric-input-row-extended">
           <input
             type="text"
             className="form-control"
@@ -61,7 +65,15 @@ function Measure({ data, onUpdate }) {
             value={newMetric.unit}
             onChange={(e) => setNewMetric({ ...newMetric, unit: e.target.value })}
           />
-          <button className="btn btn-add" onClick={addMetric}>+ Add</button>
+          <select
+            className="form-control"
+            value={newMetric.type}
+            onChange={(e) => setNewMetric({ ...newMetric, type: e.target.value })}
+          >
+            <option value="Primary">Primary</option>
+            <option value="Secondary">Secondary</option>
+          </select>
+          <button className="btn-add" onClick={addMetric}>+ Add</button>
         </div>
 
         {metrics.length > 0 && (
@@ -71,7 +83,12 @@ function Measure({ data, onUpdate }) {
               {metrics.map((metric) => (
                 <div key={metric.id} className="metric-card">
                   <button className="remove-btn" onClick={() => removeMetric(metric.id)}>×</button>
-                  <div className="metric-name">{metric.name}</div>
+                  <div className="metric-header">
+                    <div className="metric-name">{metric.name}</div>
+                    <span className={`metric-type-badge metric-${metric.type?.toLowerCase() || 'primary'}`}>
+                      {metric.type || 'Primary'}
+                    </span>
+                  </div>
                   <div className="metric-details">
                     <div className="metric-value">
                       <span className="label">Baseline:</span>
