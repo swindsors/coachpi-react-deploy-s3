@@ -363,7 +363,83 @@ export const generateReport = async (projectData) => {
       text: 'IMPROVE PHASE',
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 }
-    }),
+    })
+  );
+
+  // Solution Prioritization
+  if (projectData.rootCauseSolutions && Object.keys(projectData.rootCauseSolutions).length > 0) {
+    sections.push(
+      new Paragraph({
+        text: 'Prioritized Solutions for Root Causes',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 }
+      })
+    );
+
+    const wasteRootCauses = projectData.wasteRootCauses || {};
+    const processWastes = projectData.processWastes || {};
+    const rootCauseSolutions = projectData.rootCauseSolutions || {};
+
+    // Collect all solutions with their index scores
+    const solutionsWithScores = [];
+    Object.entries(rootCauseSolutions).forEach(([wasteId, solution]) => {
+      if (solution.description) {
+        let wasteInfo = null;
+        Object.entries(processWastes).forEach(([stepKey, wastes]) => {
+          const waste = wastes.find(w => w.id === parseInt(wasteId));
+          if (waste) {
+            wasteInfo = waste;
+          }
+        });
+
+        if (wasteInfo && wasteRootCauses[wasteId]) {
+          const indexScore = Number(solution.resources) * Number(solution.impact) * Number(solution.ease);
+          solutionsWithScores.push({
+            waste: wasteInfo,
+            rootCause: wasteRootCauses[wasteId],
+            solution,
+            indexScore
+          });
+        }
+      }
+    });
+
+    // Sort by index score (highest first)
+    solutionsWithScores.sort((a, b) => b.indexScore - a.indexScore);
+
+    solutionsWithScores.forEach((item, idx) => {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${idx + 1}. `, bold: true }),
+            new TextRun({ text: item.waste.description, bold: true }),
+            new TextRun({ text: ` [${item.waste.severity} Priority]`, italics: true })
+          ],
+          spacing: { before: 100, after: 30 }
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: '   Root Cause: ', italics: true }),
+            new TextRun({ text: item.rootCause })
+          ],
+          spacing: { after: 30 }
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: '   Proposed Solution: ', italics: true }),
+            new TextRun({ text: item.solution.description })
+          ],
+          spacing: { after: 30 }
+        }),
+        new Paragraph({
+          text: `   Rankings: Resources=${item.solution.resources}, Impact=${item.solution.impact}, Ease=${item.solution.ease} → Index Score: ${item.indexScore}`,
+          spacing: { after: 100 }
+        })
+      );
+    });
+  }
+
+  sections.push(
     new Paragraph({
       text: 'Improvement Actions',
       heading: HeadingLevel.HEADING_2,
