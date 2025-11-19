@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import ProblemStatement from './components/ProblemStatement';
 import Measure from './components/Measure';
@@ -8,6 +8,14 @@ import Control from './components/Control';
 import AIAssistant from './components/AIAssistant/AIAssistant';
 import { downloadReport } from './utils/reportGenerator';
 import { demoData } from './utils/demoData';
+import { 
+  saveProjectToFile, 
+  openProjectFromFile, 
+  createAutoSaveBackup,
+  getAutoSaveBackup,
+  clearAutoSaveBackup,
+  hasUnsavedChanges as checkUnsavedChanges
+} from './utils/fileManager';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -20,6 +28,11 @@ function App() {
     improvements: [],
     controls: []
   });
+  const [currentFileName, setCurrentFileName] = useState('Untitled');
+  const [savedProjectData, setSavedProjectData] = useState(null);
+  const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const autoSaveIntervalRef = useRef(null);
 
   const steps = [
     { id: 0, name: 'Define', component: ProblemStatement },
@@ -75,6 +88,157 @@ function App() {
     }
   };
 
+  // File Management Functions
+  const handleNewProject = () => {
+    if (checkUnsavedChanges(projectData, savedProjectData)) {
+      if (!window.confirm('You have unsaved changes. Create new project anyway?')) {
+        return;
+      }
+    }
+    setProjectData({
+      problemStatement: '',
+      metrics: [],
+      analysis: '',
+      improvements: [],
+      controls: []
+    });
+    setCurrentFileName('Untitled');
+    setSavedProjectData(null);
+    setCurrentStep(0);
+    setIsDemoMode(false);
+    setShowFileMenu(false);
+  };
+
+  const handleOpenProject = async () => {
+    if (checkUnsavedChanges(projectData, savedProjectData)) {
+      if (!window.confirm('You have unsaved changes. Open another project anyway?')) {
+        return;
+      }
+    }
+
+    try {
+      const { fileName, projectData: loadedData } = await openProjectFromFile();
+      setProjectData(loadedData);
+      setCurrentFileName(fileName);
+      setSavedProjectData(loadedData);
+      setIsDemoMode(false);
+      setShowFileMenu(false);
+      alert(`Project "${fileName}" loaded successfully!`);
+    } catch (error) {
+      if (error.message !== 'No file selected') {
+        alert(error.message);
+      }
+    }
+  };
+
+  const handleSaveProject = async () => {
+    if (currentFileName === 'Untitled') {
+      return handleSaveAsProject();
+    }
+
+    try {
+      await saveProjectToFile(projectData, currentFileName);
+      setSavedProjectData(projectData);
+      setShowFileMenu(false);
+      alert(`Project saved as "${currentFileName}.cpi"`);
+    } catch (error) {
+      alert('Failed to save project: ' + error.message);
+    }
+  };
+
+  const handleSaveAsProject = async () => {
+    const fileName = prompt('Enter project name:', currentFileName);
+    if (!fileName) return;
+
+    const cleanFileName = fileName.replace('.cpi', '').replace(/[^a-z0-9_-]/gi, '_');
+    
+    try {
+      await saveProjectToFile(projectData, cleanFileName);
+      setCurrentFileName(cleanFileName);
+      setSavedProjectData(projectData);
+      setShowFileMenu(false);
+      alert(`Project saved as "${cleanFileName}.cpi"`);
+    } catch (error) {
+      alert('Failed to save project: ' + error.message);
+    }
+  };
+
+  const toggleAutoSave = () => {
+    setIsAutoSaveEnabled(!isAutoSaveEnabled);
+    setShowFileMenu(false);
+  };
+
+  // Auto-save effect
+  useEffect(() => {
+    if (isAutoSaveEnabled) {
+      autoSaveIntervalRef.current = setInterval(() => {
+        createAutoSaveBackup(projectData, currentFileName);
+      }, 60000); // Auto-save every 60 seconds
+    } else {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, [isAutoSaveEnabled, projectData, currentFileName]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+S or Cmd+S for Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveProject();
+      }
+      // Ctrl+O or Cmd+O for Open
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+        e.preventDefault();
+        handleOpenProject();
+      }
+      // Ctrl+N or Cmd+N for New
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleNewProject();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [projectData, savedProjectData, currentFileName]);
+
+  // Check for auto-save backup on mount
+  useEffect(() => {
+    const backup = getAutoSaveBackup();
+    if (backup && backup.projectData) {
+      const timeSinceBackup = Date.now() - new Date(backup.timestamp).getTime();
+      const minutesAgo = Math.floor(timeSinceBackup / 60000);
+      
+      if (window.confirm(`Auto-save backup found from ${minutesAgo} minutes ago. Restore it?`)) {
+        setProjectData(backup.projectData);
+        setCurrentFileName(backup.fileName);
+      } else {
+        clearAutoSaveBackup();
+      }
+    }
+  }, []);
+
+  // Close file menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showFileMenu && !e.target.closest('.file-menu-container')) {
+        setShowFileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFileMenu]);
+
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
@@ -85,6 +249,45 @@ function App() {
           <p className="subtitle">Guide your project through the DMAIC methodology</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* File Menu Dropdown */}
+          <div className="file-menu-container">
+            <button 
+              className="btn-file-menu"
+              onClick={() => setShowFileMenu(!showFileMenu)}
+              title="File operations"
+            >
+              📁 File
+            </button>
+            {showFileMenu && (
+              <div className="file-menu-dropdown">
+                <button onClick={handleNewProject} className="file-menu-item">
+                  <span>🆕</span> New Project <span className="shortcut">Ctrl+N</span>
+                </button>
+                <button onClick={handleOpenProject} className="file-menu-item">
+                  <span>📂</span> Open Project <span className="shortcut">Ctrl+O</span>
+                </button>
+                <button onClick={handleSaveProject} className="file-menu-item">
+                  <span>💾</span> Save <span className="shortcut">Ctrl+S</span>
+                </button>
+                <button onClick={handleSaveAsProject} className="file-menu-item">
+                  <span>💾</span> Save As...
+                </button>
+                <div className="file-menu-divider"></div>
+                <button onClick={toggleAutoSave} className="file-menu-item">
+                  <span>{isAutoSaveEnabled ? '✓' : '○'}</span> Auto-Save (60s)
+                </button>
+                <div className="file-menu-info">
+                  <div className="current-file">
+                    📄 {currentFileName}.cpi
+                  </div>
+                  {checkUnsavedChanges(projectData, savedProjectData) && (
+                    <div className="unsaved-indicator">● Unsaved changes</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
           <button 
             className={`btn-demo-mode ${isDemoMode ? 'active' : ''}`}
             onClick={handleToggleDemoMode}
