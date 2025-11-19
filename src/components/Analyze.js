@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './StepComponent.css';
+import FiveWhys from './FiveWhys';
 
 function Analyze({ data, onUpdate }) {
   const [rootCauses, setRootCauses] = useState(data.rootCauses || '');
   const [dataAnalysis, setDataAnalysis] = useState(data.dataAnalysis || '');
   const [keyFindings, setKeyFindings] = useState(data.keyFindings || '');
+  const [fiveWhysResults, setFiveWhysResults] = useState(data.fiveWhysResults || []);
+  const [showFiveWhys, setShowFiveWhys] = useState(false);
 
   useEffect(() => {
     onUpdate({
       rootCauses,
       dataAnalysis,
-      keyFindings
+      keyFindings,
+      fiveWhysResults
     });
-  }, [rootCauses, dataAnalysis, keyFindings]);
+  }, [rootCauses, dataAnalysis, keyFindings, fiveWhysResults]);
+
+  const handleFiveWhysComplete = (result) => {
+    setFiveWhysResults([...fiveWhysResults, result]);
+    setShowFiveWhys(false);
+    
+    // Auto-populate root causes field if empty
+    if (!rootCauses) {
+      const whysText = result.whys.map((why, idx) => `Why ${idx + 1}: ${why}`).join('\n');
+      setRootCauses(`Problem: ${result.problem}\n\n${whysText}\n\nRoot Cause: ${result.rootCause}`);
+    }
+  };
 
   return (
     <div className="step-component">
@@ -25,6 +40,31 @@ function Analyze({ data, onUpdate }) {
       </div>
 
       <div className="form-section">
+        <button 
+          className="btn-add" 
+          onClick={() => setShowFiveWhys(!showFiveWhys)}
+          style={{ marginBottom: '20px' }}
+        >
+          {showFiveWhys ? '✕ Close 5 Whys Tool' : '🔍 Launch 5 Whys Analysis Tool'}
+        </button>
+
+        {showFiveWhys && (
+          <FiveWhys onComplete={handleFiveWhysComplete} />
+        )}
+
+        {fiveWhysResults.length > 0 && (
+          <div className="info-card" style={{ background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)', borderLeft: '4px solid #4caf50', marginBottom: '20px' }}>
+            <h4 style={{ color: '#2e7d32' }}>✓ Completed 5 Whys Analyses: {fiveWhysResults.length}</h4>
+            {fiveWhysResults.map((result, idx) => (
+              <div key={idx} style={{ marginTop: '10px', padding: '10px', background: 'white', borderRadius: '8px' }}>
+                <strong>Analysis {idx + 1}:</strong> {result.problem}
+                <br />
+                <strong style={{ color: '#2e7d32' }}>Root Cause:</strong> {result.rootCause}
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="form-group">
           <label htmlFor="dataAnalysis">Data Analysis Summary</label>
           <textarea
