@@ -138,6 +138,50 @@ export const generateReport = async (projectData) => {
     })
   );
 
+  // Process Maps
+  if (projectData.processMaps && projectData.processMaps.length > 0) {
+    sections.push(
+      new Paragraph({
+        text: 'Process Maps',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 }
+      })
+    );
+
+    projectData.processMaps.forEach((map, index) => {
+      sections.push(
+        new Paragraph({
+          text: `${index + 1}. ${map.processName}`,
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 100, after: 50 }
+        })
+      );
+
+      map.steps.forEach((step, stepIndex) => {
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Step ${stepIndex + 1}: ${step.name}`, bold: true }),
+              new TextRun({ text: ` (${step.type})` })
+            ],
+            spacing: { after: 30 }
+          })
+        );
+        
+        if (step.description) {
+          sections.push(
+            new Paragraph({
+              text: `   ${step.description}`,
+              spacing: { after: 50 }
+            })
+          );
+        }
+      });
+
+      sections.push(new Paragraph({ text: '', spacing: { after: 100 } }));
+    });
+  }
+
   if (projectData.metrics && projectData.metrics.length > 0) {
     sections.push(
       new Paragraph({

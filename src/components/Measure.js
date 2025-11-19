@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import './StepComponent.css';
+import ProcessMap from './ProcessMap';
 
 function Measure({ data, onUpdate }) {
   const [metrics, setMetrics] = useState(data.metrics || []);
   const [newMetric, setNewMetric] = useState({ name: '', baseline: '', target: '', unit: '', type: 'Primary' });
+  const [processMaps, setProcessMaps] = useState(data.processMaps || []);
+  const [showProcessMap, setShowProcessMap] = useState(false);
 
   useEffect(() => {
-    onUpdate({ metrics });
-  }, [metrics]);
+    onUpdate({ metrics, processMaps });
+  }, [metrics, processMaps]);
+
+  const handleProcessMapComplete = (processMapData) => {
+    setProcessMaps([...processMaps, processMapData]);
+    setShowProcessMap(false);
+  };
 
   const addMetric = () => {
     if (newMetric.name && newMetric.baseline) {
@@ -31,6 +39,40 @@ function Measure({ data, onUpdate }) {
       </div>
 
       <div className="form-section">
+        <button 
+          className="btn-add" 
+          onClick={() => setShowProcessMap(!showProcessMap)}
+          style={{ marginBottom: '20px' }}
+        >
+          {showProcessMap ? '✕ Close Process Map Tool' : '🗺️ Launch Process Map Builder'}
+        </button>
+
+        {showProcessMap && (
+          <ProcessMap onComplete={handleProcessMapComplete} />
+        )}
+
+        {processMaps.length > 0 && (
+          <div className="info-card" style={{ background: 'linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%)', borderLeft: '4px solid #5c6bc0', marginBottom: '20px' }}>
+            <h4 style={{ color: '#3f51b5' }}>✓ Completed Process Maps: {processMaps.length}</h4>
+            {processMaps.map((map, idx) => (
+              <div key={idx} style={{ marginTop: '15px', padding: '15px', background: 'white', borderRadius: '8px' }}>
+                <strong style={{ color: '#3f51b5', fontSize: '1.1rem' }}>{map.processName}</strong>
+                <div style={{ marginTop: '10px' }}>
+                  {map.steps.map((step, stepIdx) => (
+                    <div key={stepIdx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
+                      <span style={{ fontSize: '1.5rem' }}>{step.type === 'Start' ? '⬭' : step.type === 'Decision' ? '◇' : step.type === 'Document' ? '📄' : step.type === 'Data' ? '⬟' : '▭'}</span>
+                      <div>
+                        <strong>{step.name}</strong> <span style={{ fontSize: '0.85rem', color: '#666' }}>({step.type})</span>
+                        {step.description && <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '2px' }}>{step.description}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <h3>Add Metrics to Track</h3>
         <div className="helper-text" style={{ marginBottom: '15px' }}>
           <strong>Metric Types:</strong> Primary metrics directly measure your project goal (e.g., defect rate, cycle time). 
