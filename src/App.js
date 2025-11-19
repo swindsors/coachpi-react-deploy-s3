@@ -201,7 +201,11 @@ function App() {
       setSavedProjectData(loadedData);
       setIsDemoMode(false);
       setShowFileMenu(false);
-      alert(`Project "${fileName}" loaded successfully!`);
+      
+      // Refresh the page to ensure all components re-render with new data
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } catch (error) {
       if (error.message !== 'No file selected') {
         alert(error.message);
