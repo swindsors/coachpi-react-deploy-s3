@@ -6,6 +6,7 @@ import Analyze from './components/Analyze';
 import Improve from './components/Improve';
 import Control from './components/Control';
 import AIAssistant from './components/AIAssistant/AIAssistant';
+import UserAccountSelector from './components/UserAccountSelector';
 import { downloadReport } from './utils/reportGenerator';
 import { demoData } from './utils/demoData';
 import { 
@@ -331,6 +332,9 @@ function App() {
           <p className="subtitle">Guide your project through the DMAIC methodology</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* User Account Selector */}
+          <UserAccountSelector />
+          
           {/* File Menu Dropdown */}
           <div className="file-menu-container">
             <button 

@@ -1,13 +1,14 @@
 import OpenAI from 'openai';
+import { getOpenAIKey, hasOpenAIKey } from './userPreferencesService';
 
 // Check if user has configured an API key
-export const hasAPIKey = () => {
-  return !!localStorage.getItem('openai_api_key');
+export const hasAPIKey = async () => {
+  return await hasOpenAIKey();
 };
 
 // Get the OpenAI client instance
-const getOpenAIClient = () => {
-  const apiKey = localStorage.getItem('openai_api_key');
+const getOpenAIClient = async () => {
+  const apiKey = await getOpenAIKey();
   
   if (!apiKey) {
     throw new Error('No API key configured');
@@ -22,7 +23,7 @@ const getOpenAIClient = () => {
 // Main function to get AI responses
 export const getOpenAIResponse = async (message, projectContext) => {
   try {
-    const openai = getOpenAIClient();
+    const openai = await getOpenAIClient();
     const currentPhase = projectContext.currentPhase || 'define';
     
     // Build context-aware system prompt

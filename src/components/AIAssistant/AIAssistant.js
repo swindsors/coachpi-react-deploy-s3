@@ -14,8 +14,8 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
 
   // Check API key status on mount and after settings close
   useEffect(() => {
-    const checkAPIKey = () => {
-      const hasKey = hasAPIKey();
+    const checkAPIKey = async () => {
+      const hasKey = await hasAPIKey();
       setApiKeyConfigured(hasKey);
       
       // Set initial welcome message based on API key status
@@ -43,8 +43,9 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
     scrollToBottom();
   }, [messages]);
 
-  const handleAPIKeySaved = () => {
-    setApiKeyConfigured(true);
+  const handleAPIKeySaved = async () => {
+    const hasKey = await hasAPIKey();
+    setApiKeyConfigured(hasKey);
     setMessages([
       { text: "✅ API key configured successfully! I'm now ready to help you with your Six Sigma project. How can I assist you today?", isUser: false }
     ]);
