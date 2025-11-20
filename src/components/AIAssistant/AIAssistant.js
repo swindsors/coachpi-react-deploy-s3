@@ -1,15 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
-import { getMockAIResponse } from '../../services/mockAIService';
+import { getOpenAIResponse, hasAPIKey } from '../../services/openAIService';
+import APIKeySettings from './APIKeySettings';
 import './AIAssistant.css';
 
 function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
-  const [messages, setMessages] = useState([
-    { text: "Hi! I'm your Six Sigma AI assistant. I can help review your work, explain concepts, and provide suggestions. How can I help you today?", isUser: false }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showAPIKeySettings, setShowAPIKeySettings] = useState(false);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Check API key status on mount and after settings close
+  useEffect(() => {
+    const checkAPIKey = () => {
+      const hasKey = hasAPIKey();
+      setApiKeyConfigured(hasKey);
+      
+      // Set initial welcome message based on API key status
+      if (messages.length === 0) {
+        if (hasKey) {
+          setMessages([
+            { text: "Hi! I'm your Six Sigma AI assistant powered by OpenAI. I can help review your work, explain concepts, and provide suggestions. How can I help you today?", isUser: false }
+          ]);
+        } else {
+          setMessages([
+            { text: "👋 Welcome! To use the AI assistant, please configure your OpenAI API key. Click the ⚙️ Settings button above to get started.", isUser: false }
+          ]);
+        }
+      }
+    };
+    
+    checkAPIKey();
+  }, [messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -19,8 +43,25 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
     scrollToBottom();
   }, [messages]);
 
+  const handleAPIKeySaved = () => {
+    setApiKeyConfigured(true);
+    setMessages([
+      { text: "✅ API key configured successfully! I'm now ready to help you with your Six Sigma project. How can I assist you today?", isUser: false }
+    ]);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
+
+    // Check if API key is configured
+    if (!apiKeyConfigured) {
+      setMessages(prev => [...prev, 
+        { text: input.trim(), isUser: true },
+        { text: "⚠️ Please configure your OpenAI API key first. Click the ⚙️ Settings button to add your key.", isUser: false }
+      ]);
+      setInput('');
+      return;
+    }
 
     const userMessage = input.trim();
     setInput('');
@@ -36,7 +77,7 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
         currentPhase: currentPhase
       };
       
-      const aiResponse = await getMockAIResponse(userMessage, projectContext);
+      const aiResponse = await getOpenAIResponse(userMessage, projectContext);
       
       // Add AI response
       setMessages(prev => [...prev, { text: aiResponse, isUser: false }]);
@@ -91,8 +132,20 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
           <div className="header-title">
             <span className="ai-icon">🤖</span>
             <h3>Six Sigma AI Assistant</h3>
+            <span className={`api-status ${apiKeyConfigured ? 'connected' : 'disconnected'}`}>
+              {apiKeyConfigured ? '🟢 Connected' : '🔴 Not Configured'}
+            </span>
           </div>
-          <button className="close-btn" onClick={onClose} title="Close">×</button>
+          <div className="header-actions">
+            <button 
+              className="settings-btn" 
+              onClick={() => setShowAPIKeySettings(true)} 
+              title="API Key Settings"
+            >
+              ⚙️
+            </button>
+            <button className="close-btn" onClick={onClose} title="Close">×</button>
+          </div>
         </div>
 
         <div className="current-context">
@@ -181,8 +234,19 @@ function AIAssistant({ isOpen, onClose, projectData, currentPhase }) {
         </div>
 
         <div className="ai-footer">
-          <small>💡 Mock AI - Real AI integration coming soon!</small>
+          <small>
+            {apiKeyConfigured 
+              ? '🤖 Powered by OpenAI GPT-3.5 Turbo' 
+              : '⚙️ Configure API key to enable AI assistance'}
+          </small>
         </div>
+
+        {showAPIKeySettings && (
+          <APIKeySettings 
+            onClose={() => setShowAPIKeySettings(false)}
+            onKeySaved={handleAPIKeySaved}
+          />
+        )}
       </div>
     </div>
   );

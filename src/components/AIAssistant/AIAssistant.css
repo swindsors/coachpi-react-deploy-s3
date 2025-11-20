@@ -49,6 +49,51 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
+}
+
+.api-status {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.api-status.connected {
+  background: rgba(76, 175, 80, 0.2);
+  color: #2e7d32;
+}
+
+.api-status.disconnected {
+  background: rgba(244, 67, 54, 0.2);
+  color: #c62828;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .ai-icon {
