@@ -184,7 +184,10 @@ const ManufacturingSimulator = () => {
         jobNumber: jobNumber || '',
         dueDate: dueDate || '',
         status: 'green',
-        statusReason: ''
+        statusReason: '',
+        defectCount: 0,
+        defects: [], // Array to store defect details
+        andonPulls: 0 // Track number of times Andon was pulled
       }]
     }));
   };
@@ -268,7 +271,8 @@ const ManufacturingSimulator = () => {
         if (box.id === boxId) {
           return {
             ...box,
-            andonActive: true
+            andonActive: true,
+            andonPulls: (box.andonPulls || 0) + 1 // Increment counter
           };
         }
         return box;
@@ -303,13 +307,115 @@ const ManufacturingSimulator = () => {
     });
   };
 
-  const stopSimulation = () => {
+  // Increment defect count
+  const incrementDefects = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    // Prompt for defect type
+    const defectTypes = [
+      '1. Missing part',
+      '2. Damaged part', 
+      '3. Incorrect connection',
+      '4. Other'
+    ];
+    
+    const defectTypeInput = prompt(
+      `Select defect type:\n${defectTypes.join('\n')}\n\nEnter number (1-4):`
+    );
+    
+    if (defectTypeInput === null) return; // User cancelled
+    
+    const defectTypeMap = {
+      '1': 'Missing part',
+      '2': 'Damaged part',
+      '3': 'Incorrect connection',
+      '4': 'Other'
+    };
+    
+    const selectedDefectType = defectTypeMap[defectTypeInput] || 'Other';
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          const newDefect = {
+            type: selectedDefectType,
+            timestamp: Date.now()
+          };
+          
+          return {
+            ...box,
+            defectCount: (box.defectCount || 0) + 1,
+            defects: [...(box.defects || []), newDefect]
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Decrement defect count
+  const decrementDefects = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId && (box.defectCount || 0) > 0) {
+          // Remove the last defect from the array
+          const updatedDefects = [...(box.defects || [])];
+          updatedDefects.pop(); // Remove last defect
+          
+          return {
+            ...box,
+            defectCount: box.defectCount - 1,
+            defects: updatedDefects
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  const showMetrics = () => {
     setIsSimulationStopped(true);
   };
 
-  const resumeSimulation = () => {
+  const hideMetrics = () => {
     setIsSimulationStopped(false);
     setCurrentTime(Date.now());
+  };
+
+  const resetFactory = () => {
+    if (window.confirm('Are you sure you want to reset the factory? This will clear all sections and data.')) {
+      setStations({
+        station1: [],
+        station2: [],
+        station3: [],
+        station4: [],
+        station5: [],
+        station6: []
+      });
+      setBoxCounter(0);
+      setIsSimulationStopped(false);
+      setStationWaitTimes({
+        station1: { totalWaitTime: 0, becameEmptyAt: Date.now() },
+        station2: { totalWaitTime: 0, becameEmptyAt: Date.now() },
+        station3: { totalWaitTime: 0, becameEmptyAt: Date.now() },
+        station4: { totalWaitTime: 0, becameEmptyAt: Date.now() },
+        station5: { totalWaitTime: 0, becameEmptyAt: Date.now() },
+        station6: { totalWaitTime: 0, becameEmptyAt: Date.now() }
+      });
+      setCurrentTime(Date.now());
+    }
   };
 
   // Calculate comprehensive summary
@@ -322,6 +428,32 @@ const ManufacturingSimulator = () => {
       }
       return sum + wait;
     }, 0);
+
+    // Calculate defect statistics
+    const totalDefects = allBoxes.reduce((sum, box) => sum + (box.defectCount || 0), 0);
+    const totalUnits = allBoxes.length;
+    const defectsPerUnit = totalUnits > 0 ? (totalDefects / totalUnits).toFixed(2) : 0;
+    
+    // Calculate Andon pulls
+    const totalAndonPulls = allBoxes.reduce((sum, box) => sum + (box.andonPulls || 0), 0);
+    
+    // Collect all defects with section info
+    const allDefects = [];
+    allBoxes.forEach(box => {
+      if (box.defects && box.defects.length > 0) {
+        box.defects.forEach(defect => {
+          allDefects.push({
+            section: box.name,
+            jobNumber: box.jobNumber,
+            type: defect.type,
+            timestamp: defect.timestamp
+          });
+        });
+      }
+    });
+    
+    // Sort defects by timestamp (newest first)
+    allDefects.sort((a, b) => b.timestamp - a.timestamp);
 
     const boxSummaries = allBoxes.map(box => {
       const times = getBoxTimes(box, null);
@@ -347,7 +479,15 @@ const ManufacturingSimulator = () => {
       };
     });
 
-    return { totalStationWaitTime, boxSummaries };
+    return { 
+      totalStationWaitTime, 
+      boxSummaries, 
+      totalDefects, 
+      totalUnits, 
+      defectsPerUnit,
+      allDefects,
+      totalAndonPulls
+    };
   };
 
   // Helper function to format time in seconds
@@ -574,6 +714,34 @@ const ManufacturingSimulator = () => {
                       </button>
                     )}
                   </div>
+                  
+                  {/* Defect Counter */}
+                  <div className="defect-counter">
+                    <button
+                      className="btn-defect-decrement"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        decrementDefects(box.id, stationKey);
+                      }}
+                      disabled={isSimulationStopped || (box.defectCount || 0) === 0}
+                    >
+                      −
+                    </button>
+                    <div className="defect-display">
+                      <span className="defect-label">Defects:</span>
+                      <span className="defect-count">{box.defectCount || 0}</span>
+                    </div>
+                    <button
+                      className="btn-defect-increment"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        incrementDefects(box.id, stationKey);
+                      }}
+                      disabled={isSimulationStopped}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               );
             }
@@ -601,19 +769,69 @@ const ManufacturingSimulator = () => {
           ➕ Add Section to Kitting
         </button>
         {!isSimulationStopped ? (
-          <button className="stop-btn" onClick={stopSimulation}>
-            ⏸️ Stop Simulation
+          <button className="metrics-btn" onClick={showMetrics}>
+            📊 Report Metrics
           </button>
         ) : (
-          <button className="resume-btn" onClick={resumeSimulation}>
-            ▶️ Resume Simulation
+          <button className="resume-btn" onClick={hideMetrics}>
+            ▶️ Hide Metrics
           </button>
         )}
+        <button className="reset-btn" onClick={resetFactory}>
+          🔄 Reset Factory
+        </button>
       </div>
 
       {isSimulationStopped && summary && (
         <div className="simulation-summary">
           <h3>📊 Simulation Summary</h3>
+          
+          {/* Defect Statistics */}
+          <div className="summary-section">
+            <h4>Quality Metrics:</h4>
+            <div className="quality-metrics">
+              <div className="quality-metric">
+                <span className="metric-label">Total Defects:</span>
+                <span className="metric-value">{summary.totalDefects}</span>
+              </div>
+              <div className="quality-metric">
+                <span className="metric-label">Total Units:</span>
+                <span className="metric-value">{summary.totalUnits}</span>
+              </div>
+              <div className="quality-metric highlight">
+                <span className="metric-label">Defects Per Unit:</span>
+                <span className="metric-value">{summary.defectsPerUnit}</span>
+              </div>
+              <div className="quality-metric andon-metric">
+                <span className="metric-label">Andon Cord Pulls:</span>
+                <span className="metric-value">{summary.totalAndonPulls}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Defect List */}
+          {summary.allDefects.length > 0 && (
+            <div className="summary-section">
+              <h4>Defect Log:</h4>
+              <div className="defects-table">
+                <div className="table-header">
+                  <span>Section</span>
+                  <span>Job #</span>
+                  <span>Defect Type</span>
+                  <span>Time Logged</span>
+                </div>
+                {summary.allDefects.map((defect, idx) => (
+                  <div key={idx} className="table-row">
+                    <span>{defect.section}</span>
+                    <span>{defect.jobNumber || 'N/A'}</span>
+                    <span className="defect-type">{defect.type}</span>
+                    <span>{new Date(defect.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="summary-section">
             <h4>Station Wait Times (Empty Time):</h4>
             <div className="wait-times-grid">
