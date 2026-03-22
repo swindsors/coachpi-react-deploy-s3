@@ -14,6 +14,8 @@ const ManufacturingSimulator = () => {
   const [boxCounter, setBoxCounter] = useState(0); // Track total boxes created (starts at 0)
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isSimulationStopped, setIsSimulationStopped] = useState(false);
+  const [showJobDialog, setShowJobDialog] = useState(false);
+  const [jobDialogData, setJobDialogData] = useState({ jobNumber: '', dueDate: '' });
   const [stationWaitTimes, setStationWaitTimes] = useState({
     station1: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Kitting
     station2: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Sub Assembly
@@ -156,14 +158,15 @@ const ManufacturingSimulator = () => {
 
   const addBox = () => {
     if (isSimulationStopped) return;
-    
-    // Prompt for job number
-    const jobNumber = prompt('Enter Job Number:');
-    if (jobNumber === null) return; // User cancelled
-    
-    // Prompt for due date
-    const dueDate = prompt('Enter Due Date (YYYY-MM-DD):');
-    if (dueDate === null) return; // User cancelled
+    setJobDialogData({ jobNumber: '', dueDate: '' });
+    setShowJobDialog(true);
+  };
+
+  const handleJobDialogSubmit = () => {
+    if (!jobDialogData.jobNumber) {
+      alert('Please enter a job number');
+      return;
+    }
     
     const newId = `box-${Date.now()}`;
     const newBoxNumber = boxCounter + 1;
@@ -173,7 +176,7 @@ const ManufacturingSimulator = () => {
       ...prev,
       station1: [...prev.station1, { 
         id: newId, 
-        name: `Section ${newBoxNumber}`,
+        name: `Job ${jobDialogData.jobNumber || newBoxNumber}`,
         createdAt: now,
         enteredStationAt: now,
         stationTimes: { station1: 0 },
@@ -181,8 +184,8 @@ const ManufacturingSimulator = () => {
         workStartedAt: null,
         totalWorkTime: 0,
         totalWaitTime: 0,
-        jobNumber: jobNumber || '',
-        dueDate: dueDate || '',
+        jobNumber: jobDialogData.jobNumber || '',
+        dueDate: jobDialogData.dueDate || '',
         status: 'green',
         statusReason: '',
         defectCount: 0,
@@ -191,6 +194,12 @@ const ManufacturingSimulator = () => {
         percentComplete: 0 // User-editable completion percentage
       }]
     }));
+    setShowJobDialog(false);
+  };
+
+  const handleJobDialogCancel = () => {
+    setShowJobDialog(false);
+    setJobDialogData({ jobNumber: '', dueDate: '' });
   };
 
   // Start work on a box
@@ -654,25 +663,20 @@ const ManufacturingSimulator = () => {
                   onDragStart={(e) => handleDragStart(e, box, stationKey)}
                 >
                   <div className="box-name">
-                    {box.name} 
+                    <strong>Job {box.jobNumber || 'N/A'}</strong>
                     <span className={`status-badge ${box.isWorking ? 'working' : 'waiting'}`}>
                       {box.isWorking ? '🔨 WORKING' : '⏸️ WAITING'}
                     </span>
                   </div>
                   
                   {/* Section Details - Display Only */}
-                  <div className="section-details">
-                    {box.jobNumber && (
-                      <div className="detail-display">
-                        <strong>Job #:</strong> {box.jobNumber}
-                      </div>
-                    )}
-                    {box.dueDate && (
+                  {box.dueDate && (
+                    <div className="section-details">
                       <div className="detail-display">
                         <strong>Due:</strong> {box.dueDate}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   
                   <div className="box-timer">
                     <div className="timer-row">💼 Work: {times.workTime}</div>
@@ -981,6 +985,39 @@ const ManufacturingSimulator = () => {
           </div>
         </div>
       </div>
+
+      {/* Job Dialog Modal */}
+      {showJobDialog && (
+        <div className="modal-overlay" onClick={handleJobDialogCancel}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3>Add New Job</h3>
+            <div className="dialog-form">
+              <div className="form-group">
+                <label>Job Number:</label>
+                <input
+                  type="text"
+                  value={jobDialogData.jobNumber}
+                  onChange={(e) => setJobDialogData({ ...jobDialogData, jobNumber: e.target.value })}
+                  placeholder="Enter job number"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Due Date:</label>
+                <input
+                  type="date"
+                  value={jobDialogData.dueDate}
+                  onChange={(e) => setJobDialogData({ ...jobDialogData, dueDate: e.target.value })}
+                />
+              </div>
+              <div className="dialog-buttons">
+                <button className="btn-cancel" onClick={handleJobDialogCancel}>Cancel</button>
+                <button className="btn-submit" onClick={handleJobDialogSubmit}>Add Job</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
