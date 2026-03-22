@@ -386,19 +386,40 @@ const ManufacturingSimulator = () => {
     });
   };
 
-  // Update percent complete
-  const handlePercentCompleteChange = (boxId, stationKey, newPercent) => {
+  // Increment percent complete by 10
+  const incrementPercentComplete = (boxId, stationKey) => {
     if (isSimulationStopped) return;
-    
-    // Ensure value is between 0 and 100
-    const validPercent = Math.max(0, Math.min(100, parseInt(newPercent) || 0));
     
     setStations((prev) => {
       const updatedStation = prev[stationKey].map(box => {
         if (box.id === boxId) {
+          const newPercent = Math.min(100, (box.percentComplete || 0) + 10);
           return {
             ...box,
-            percentComplete: validPercent
+            percentComplete: newPercent
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Decrement percent complete by 10
+  const decrementPercentComplete = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          const newPercent = Math.max(0, (box.percentComplete || 0) - 10);
+          return {
+            ...box,
+            percentComplete: newPercent
           };
         }
         return box;
@@ -770,32 +791,31 @@ const ManufacturingSimulator = () => {
                   </div>
                   
                   {/* Percent Complete Indicator */}
-                  <div 
-                    className="percent-complete-container"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <label className="percent-complete-label">% Complete:</label>
-                    <select
-                      className="percent-complete-input"
-                      value={box.percentComplete || 0}
-                      onChange={(e) => {
-                        handlePercentCompleteChange(box.id, stationKey, e.target.value);
+                  <div className="percent-complete-container">
+                    <button
+                      className="btn-percent-decrement"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        decrementPercentComplete(box.id, stationKey);
                       }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      disabled={isSimulationStopped}
+                      disabled={isSimulationStopped || (box.percentComplete || 0) === 0}
                     >
-                      <option value="0">0%</option>
-                      <option value="10">10%</option>
-                      <option value="20">20%</option>
-                      <option value="30">30%</option>
-                      <option value="40">40%</option>
-                      <option value="50">50%</option>
-                      <option value="60">60%</option>
-                      <option value="70">70%</option>
-                      <option value="80">80%</option>
-                      <option value="90">90%</option>
-                      <option value="100">100%</option>
-                    </select>
+                      −
+                    </button>
+                    <div className="percent-display">
+                      <span className="percent-label">% Complete:</span>
+                      <span className="percent-value">{box.percentComplete || 0}%</span>
+                    </div>
+                    <button
+                      className="btn-percent-increment"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        incrementPercentComplete(box.id, stationKey);
+                      }}
+                      disabled={isSimulationStopped || (box.percentComplete || 0) >= 100}
+                    >
+                      +
+                    </button>
                     <div className="percent-complete-bar">
                       <div 
                         className="percent-complete-fill"
