@@ -330,20 +330,20 @@ function App() {
     <div className="App">
       <header className="app-header">
         <div>
-          <h1>Coach PI - Six Sigma Process Improvement</h1>
+          <h1>Process Improvement Tool</h1>
           <p className="subtitle">Guide your project through the DMAIC methodology</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* User Account Selector */}
           <UserAccountSelector />
 
-          {/* Manufacturing Simulator Button */}
-          <button 
+          {/* Visual Factory Button */}
+          <button
             className={`btn-simulator ${showSimulator ? 'active' : ''}`}
             onClick={() => setShowSimulator(s => !s)}
-            title="Toggle Manufacturing Simulator"
+            title="Toggle Visual Factory"
           >
-            {showSimulator ? '✕ Close Simulator' : '⚙️ Simulator'}
+            {showSimulator ? '✕ Close Visual Factory' : '🏭 Visual Factory'}
           </button>
           
           {/* File Menu Dropdown */}
