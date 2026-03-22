@@ -1,0 +1,689 @@
+import React, { useState, useRef, useEffect } from 'react';
+import './ManufacturingSimulator.css';
+
+const ManufacturingSimulator = () => {
+  const [stations, setStations] = useState({
+    station1: [], // Kitting
+    station2: [], // Sub Assembly
+    station3: [], // Final Assembly
+    station4: [], // Test
+    station5: [], // Inspection
+    station6: []  // Output
+  });
+
+  const [boxCounter, setBoxCounter] = useState(0); // Track total boxes created (starts at 0)
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [isSimulationStopped, setIsSimulationStopped] = useState(false);
+  const [stationWaitTimes, setStationWaitTimes] = useState({
+    station1: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Kitting
+    station2: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Sub Assembly
+    station3: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Final Assembly
+    station4: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Test
+    station5: { totalWaitTime: 0, becameEmptyAt: Date.now() }, // Inspection
+    station6: { totalWaitTime: 0, becameEmptyAt: Date.now() }  // Output
+  });
+
+  // Update current time every second for live timer updates (only if not stopped)
+  useEffect(() => {
+    if (isSimulationStopped) return;
+    
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isSimulationStopped]);
+
+  // Update wait times when stations change
+  useEffect(() => {
+    setStationWaitTimes((prev) => {
+      const updated = { ...prev };
+      Object.keys(stations).forEach((stationKey) => {
+        const stationIsEmpty = stations[stationKey].length === 0;
+        const wasTrackingEmpty = prev[stationKey].becameEmptyAt !== null;
+
+        if (stationIsEmpty && !wasTrackingEmpty) {
+          // Station just became empty, start tracking
+          updated[stationKey] = {
+            ...prev[stationKey],
+            becameEmptyAt: Date.now()
+          };
+        } else if (!stationIsEmpty && wasTrackingEmpty) {
+          // Station is now occupied, stop tracking and add to total
+          const waitTime = Date.now() - prev[stationKey].becameEmptyAt;
+          updated[stationKey] = {
+            totalWaitTime: prev[stationKey].totalWaitTime + waitTime,
+            becameEmptyAt: null
+          };
+        }
+      });
+      return updated;
+    });
+  }, [stations]);
+  
+  const handleDragStart = (e, box, fromStation) => {
+    console.log('Drag started:', box.name, 'from', fromStation);
+    const data = { box, fromStation };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify(data));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, toStation) => {
+    e.preventDefault();
+    console.log('Drop event triggered on', toStation);
+    
+    // Retrieve data from dataTransfer
+    const data = e.dataTransfer.getData('text/plain');
+    console.log('Retrieved data:', data);
+    
+    if (!data || data.trim() === '') {
+      console.log('No data found or empty data');
+      return;
+    }
+    
+    let box, fromStation;
+    try {
+      const parsed = JSON.parse(data);
+      box = parsed.box;
+      fromStation = parsed.fromStation;
+    } catch (error) {
+      console.error('Error parsing drag data:', error);
+      return;
+    }
+    console.log('Moving box:', box.name, 'from', fromStation, 'to', toStation);
+    
+    // Don't drop on the same station
+    if (fromStation === toStation) {
+      console.log('Same station, canceling drop');
+      return;
+    }
+
+    setStations((prev) => {
+      const boxToMove = prev[fromStation].find(b => b.id === box.id);
+      if (!boxToMove) {
+        console.log('Box not found');
+        return prev;
+      }
+
+      // Calculate time spent in current station
+      const now = Date.now();
+      const timeInStation = now - boxToMove.enteredStationAt;
+      
+      // Calculate work time in current station
+      let workTimeInStation = 0;
+      if (boxToMove.isWorking && boxToMove.workStartedAt) {
+        workTimeInStation = now - boxToMove.workStartedAt;
+      }
+      
+      // Calculate wait time in current station (time in station minus work time)
+      const waitTimeInStation = timeInStation - workTimeInStation;
+      
+      // Accumulate total work and wait times
+      const finalWorkTime = (boxToMove.totalWorkTime || 0) + workTimeInStation;
+      const finalWaitTime = (boxToMove.totalWaitTime || 0) + waitTimeInStation;
+      
+      // Check if moving to station 6 (final output station)
+      const isCompleting = toStation === 'station6';
+      
+      // Update box with time tracking - reset work status when moving
+      const updatedBox = {
+        ...boxToMove,
+        enteredStationAt: isCompleting ? boxToMove.enteredStationAt : now,
+        completedAt: isCompleting ? now : undefined,
+        stationTimes: {
+          ...boxToMove.stationTimes,
+          [fromStation]: (boxToMove.stationTimes[fromStation] || 0) + timeInStation,
+          [toStation]: 0
+        },
+        isWorking: false, // Stop work when moving to new station
+        workStartedAt: null,
+        totalWorkTime: finalWorkTime, // Save accumulated work time
+        totalWaitTime: finalWaitTime  // Save accumulated wait time
+      };
+
+      console.log('Successfully moving box');
+      return {
+        ...prev,
+        [fromStation]: prev[fromStation].filter(b => b.id !== box.id),
+        [toStation]: [...prev[toStation], updatedBox]
+      };
+    });
+  };
+
+  const addBox = () => {
+    if (isSimulationStopped) return;
+    
+    // Prompt for job number
+    const jobNumber = prompt('Enter Job Number:');
+    if (jobNumber === null) return; // User cancelled
+    
+    // Prompt for due date
+    const dueDate = prompt('Enter Due Date (YYYY-MM-DD):');
+    if (dueDate === null) return; // User cancelled
+    
+    const newId = `box-${Date.now()}`;
+    const newBoxNumber = boxCounter + 1;
+    const now = Date.now();
+    setBoxCounter(newBoxNumber);
+    setStations((prev) => ({
+      ...prev,
+      station1: [...prev.station1, { 
+        id: newId, 
+        name: `Section ${newBoxNumber}`,
+        createdAt: now,
+        enteredStationAt: now,
+        stationTimes: { station1: 0 },
+        isWorking: false,
+        workStartedAt: null,
+        totalWorkTime: 0,
+        totalWaitTime: 0,
+        jobNumber: jobNumber || '',
+        dueDate: dueDate || '',
+        status: 'green',
+        statusReason: ''
+      }]
+    }));
+  };
+
+  // Start work on a box
+  const handleStartWork = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId && !box.isWorking) {
+          return {
+            ...box,
+            isWorking: true,
+            workStartedAt: Date.now()
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Stop work on a box
+  const handleStopWork = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId && box.isWorking) {
+          const workDuration = Date.now() - box.workStartedAt;
+          return {
+            ...box,
+            isWorking: false,
+            workStartedAt: null,
+            totalWorkTime: (box.totalWorkTime || 0) + workDuration
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Change status
+  const handleChangeStatus = (boxId, stationKey, newStatus) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          return {
+            ...box,
+            status: newStatus
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Pull Andon Cord
+  const handlePullAndon = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          return {
+            ...box,
+            andonActive: true
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Reset Andon
+  const handleResetAndon = (boxId, stationKey) => {
+    if (isSimulationStopped) return;
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          return {
+            ...box,
+            andonActive: false
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  const stopSimulation = () => {
+    setIsSimulationStopped(true);
+  };
+
+  const resumeSimulation = () => {
+    setIsSimulationStopped(false);
+    setCurrentTime(Date.now());
+  };
+
+  // Calculate comprehensive summary
+  const calculateSummary = () => {
+    const allBoxes = Object.values(stations).flat();
+    const totalStationWaitTime = Object.values(stationWaitTimes).reduce((sum, station) => {
+      let wait = station.totalWaitTime;
+      if (station.becameEmptyAt !== null) {
+        wait += (currentTime - station.becameEmptyAt);
+      }
+      return sum + wait;
+    }, 0);
+
+    const boxSummaries = allBoxes.map(box => {
+      const times = getBoxTimes(box, null);
+      const currentStationTime = currentTime - box.enteredStationAt;
+      
+      // Calculate work and wait times
+      let workTime = box.totalWorkTime || 0;
+      if (box.isWorking && box.workStartedAt) {
+        workTime += (currentTime - box.workStartedAt);
+      }
+      
+      const totalTime = Object.values(box.stationTimes || {}).reduce((sum, time) => sum + time, 0) + currentStationTime;
+      const waitTime = totalTime - workTime;
+      
+      return {
+        name: box.name,
+        station1: box.stationTimes?.station1 || 0,
+        station2: box.stationTimes?.station2 || 0,
+        station3: box.stationTimes?.station3 || 0,
+        workTime: workTime,
+        waitTime: waitTime,
+        total: totalTime
+      };
+    });
+
+    return { totalStationWaitTime, boxSummaries };
+  };
+
+  // Helper function to format time in seconds
+  const formatTime = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  // Calculate current time in station, work time, and wait time
+  const getBoxTimes = (box, currentStationKey) => {
+    const now = currentTime;
+    
+    // Calculate total work time (accumulated + current if working)
+    let totalWorkTime = box.totalWorkTime || 0;
+    if (box.isWorking && box.workStartedAt) {
+      totalWorkTime += (now - box.workStartedAt);
+    }
+    
+    // Calculate time in current station
+    const timeInStation = now - box.enteredStationAt;
+    
+    // Total time across all stations
+    const totalTime = Object.values(box.stationTimes || {}).reduce((sum, time) => sum + time, 0) + timeInStation;
+    
+    // Wait time is simply total time minus work time
+    const totalWaitTime = totalTime - totalWorkTime;
+    
+    return {
+      workTime: formatTime(totalWorkTime),
+      waitTime: formatTime(totalWaitTime),
+      stationTime: formatTime(timeInStation),
+      total: formatTime(totalTime)
+    };
+  };
+
+  // Calculate wait time for a station
+  const getStationWaitTime = (stationKey) => {
+    const waitData = stationWaitTimes[stationKey];
+    let totalWait = waitData.totalWaitTime;
+    
+    // If currently empty, add current empty time
+    if (waitData.becameEmptyAt !== null) {
+      totalWait += (currentTime - waitData.becameEmptyAt);
+    }
+    
+    return formatTime(totalWait);
+  };
+
+  const Station = ({ title, stationKey }) => {
+    const [isDragOver, setIsDragOver] = useState(false);
+    const dragCounter = useRef(0);
+
+    const handleDragEnter = () => {
+      dragCounter.current++;
+      setIsDragOver(true);
+    };
+
+    const handleDragLeave = () => {
+      dragCounter.current--;
+      if (dragCounter.current === 0) {
+        setIsDragOver(false);
+      }
+    };
+
+    const waitTime = getStationWaitTime(stationKey);
+    const isEmpty = stations[stationKey].length === 0;
+
+    return (
+      <div
+        className="station-card"
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => {
+          e.preventDefault();
+          dragCounter.current = 0;
+          setIsDragOver(false);
+          handleDrop(e, stationKey);
+        }}
+      >
+        <h3>{title}</h3>
+        <div className={`boxes-container ${isDragOver ? 'drag-over' : ''}`}>
+          {stations[stationKey].map((box) => {
+            const isCompleted = stationKey === 'station6' && box.completedAt;
+            
+            if (isCompleted) {
+              // Show summary for completed boxes
+              const totalTime = Object.values(box.stationTimes || {}).reduce((sum, time) => sum + time, 0);
+              return (
+                <div
+                  key={box.id}
+                  className="box completed"
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, box, stationKey)}
+                >
+                  <div className="box-name">✓ {box.name} - COMPLETED</div>
+                  <div className="box-summary">
+                    <div className="summary-title">Time Summary:</div>
+                    <div className="summary-row">Station 1: {formatTime(box.stationTimes.station1 || 0)}</div>
+                    <div className="summary-row">Station 2: {formatTime(box.stationTimes.station2 || 0)}</div>
+                    <div className="summary-row">Station 3: {formatTime(box.stationTimes.station3 || 0)}</div>
+                    <div className="summary-total">Total Time: {formatTime(totalTime)}</div>
+                  </div>
+                </div>
+              );
+            } else {
+              // Show live timers for in-progress boxes
+              const times = getBoxTimes(box, stationKey);
+              return (
+                <div
+                  key={box.id}
+                  className={`box ${box.isWorking ? 'working' : 'waiting'} status-${box.status} ${box.andonActive ? 'andon-active' : ''}`}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, box, stationKey)}
+                >
+                  <div className="box-name">
+                    {box.name} 
+                    <span className={`status-badge ${box.isWorking ? 'working' : 'waiting'}`}>
+                      {box.isWorking ? '🔨 WORKING' : '⏸️ WAITING'}
+                    </span>
+                  </div>
+                  
+                  {/* Section Details - Display Only */}
+                  <div className="section-details">
+                    {box.jobNumber && (
+                      <div className="detail-display">
+                        <strong>Job #:</strong> {box.jobNumber}
+                      </div>
+                    )}
+                    {box.dueDate && (
+                      <div className="detail-display">
+                        <strong>Due:</strong> {box.dueDate}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="box-timer">
+                    <div className="timer-row">💼 Work: {times.workTime}</div>
+                    <div className="timer-row">⏳ Wait: {times.waitTime}</div>
+                    <div className="timer-row">🕐 Total: {times.total}</div>
+                  </div>
+                  <div className="work-controls">
+                    {!box.isWorking ? (
+                      <button 
+                        className="btn-start-work" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartWork(box.id, stationKey);
+                        }}
+                        disabled={isSimulationStopped}
+                      >
+                        ▶️ Start Work
+                      </button>
+                    ) : (
+                      <button 
+                        className="btn-stop-work" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStopWork(box.id, stationKey);
+                        }}
+                        disabled={isSimulationStopped}
+                      >
+                        ⏸️ Stop Work
+                      </button>
+                    )}
+                  </div>
+                  <div className="status-controls">
+                    <button
+                      className={`btn-status ${box.status === 'green' ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleChangeStatus(box.id, stationKey, 'green');
+                      }}
+                      disabled={isSimulationStopped}
+                    >
+                      🟢
+                    </button>
+                    <button
+                      className={`btn-status ${box.status === 'yellow' ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleChangeStatus(box.id, stationKey, 'yellow');
+                      }}
+                      disabled={isSimulationStopped}
+                    >
+                      🟡
+                    </button>
+                    <button
+                      className={`btn-status ${box.status === 'red' ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleChangeStatus(box.id, stationKey, 'red');
+                      }}
+                      disabled={isSimulationStopped}
+                    >
+                      🔴
+                    </button>
+                  </div>
+                  <div className="andon-controls">
+                    {!box.andonActive ? (
+                      <button
+                        className="btn-andon-pull"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePullAndon(box.id, stationKey);
+                        }}
+                        disabled={isSimulationStopped}
+                      >
+                        🚨 Pull Andon Cord
+                      </button>
+                    ) : (
+                      <button
+                        className="btn-andon-reset"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResetAndon(box.id, stationKey);
+                        }}
+                        disabled={isSimulationStopped}
+                      >
+                        ✅ Reset Andon
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+          })}
+        </div>
+        <div className="station-count">{stations[stationKey].length} item(s)</div>
+        <div className={`wait-time ${isEmpty ? 'waiting' : ''}`}>
+          ⏳ Wait Time: {waitTime}
+        </div>
+      </div>
+    );
+  };
+
+  const summary = isSimulationStopped ? calculateSummary() : null;
+
+  return (
+    <div className="simulator-container">
+      <div className="simulator-header">
+        <h2>Manufacturing Line Simulator</h2>
+        <p className="simulator-description">Drag and drop boxes between stations to simulate a manufacturing process</p>
+      </div>
+
+      <div className="control-buttons">
+        <button className="add-box-btn" onClick={addBox} disabled={isSimulationStopped}>
+          ➕ Add Section to Kitting
+        </button>
+        {!isSimulationStopped ? (
+          <button className="stop-btn" onClick={stopSimulation}>
+            ⏸️ Stop Simulation
+          </button>
+        ) : (
+          <button className="resume-btn" onClick={resumeSimulation}>
+            ▶️ Resume Simulation
+          </button>
+        )}
+      </div>
+
+      {isSimulationStopped && summary && (
+        <div className="simulation-summary">
+          <h3>📊 Simulation Summary</h3>
+          <div className="summary-section">
+            <h4>Station Wait Times (Empty Time):</h4>
+            <div className="wait-times-grid">
+              <div className="wait-item">Kitting: {getStationWaitTime('station1')}</div>
+              <div className="wait-item">Sub Assembly: {getStationWaitTime('station2')}</div>
+              <div className="wait-item">Final Assembly: {getStationWaitTime('station3')}</div>
+              <div className="wait-item">Test: {getStationWaitTime('station4')}</div>
+              <div className="wait-item">Inspection: {getStationWaitTime('station5')}</div>
+              <div className="wait-item">Output: {getStationWaitTime('station6')}</div>
+              <div className="wait-item total">Total Wait Time: {formatTime(summary.totalStationWaitTime)}</div>
+            </div>
+          </div>
+          <div className="summary-section">
+            <h4>Box Time Analysis:</h4>
+            <div className="boxes-summary-table">
+              <div className="table-header">
+                <span>Box</span>
+                <span>Work Time</span>
+                <span>Wait Time</span>
+                <span>Total Time</span>
+              </div>
+              {summary.boxSummaries.map((box, idx) => (
+                <div key={idx} className="table-row">
+                  <span>{box.name}</span>
+                  <span className="work-col">💼 {formatTime(box.workTime)}</span>
+                  <span className="wait-col">⏳ {formatTime(box.waitTime)}</span>
+                  <span className="total-col">🕐 {formatTime(box.total)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="manufacturing-line">
+        <Station title="Kitting" stationKey="station1" />
+        <div className="station-arrow">→</div>
+        <Station title="Sub Assembly" stationKey="station2" />
+        <div className="station-arrow">→</div>
+        <Station title="Final Assembly" stationKey="station3" />
+        <div className="station-arrow">→</div>
+        <Station title="Test" stationKey="station4" />
+        <div className="station-arrow">→</div>
+        <Station title="Inspection" stationKey="station5" />
+        <div className="station-arrow">→</div>
+        <Station title="Ready to Ship" stationKey="station6" />
+      </div>
+
+      <div className="simulator-footer">
+        <div className="simulator-stats">
+          <div className="stat-item">
+            <span className="stat-label">Total Sections:</span>
+            <span className="stat-value">
+              {Object.values(stations).reduce((sum, s) => sum + s.length, 0)}
+            </span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">In Progress:</span>
+            <span className="stat-value">
+              {stations.station2.length + stations.station3.length + stations.station4.length + stations.station5.length}
+            </span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Completed:</span>
+            <span className="stat-value">{stations.station6.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ManufacturingSimulator;

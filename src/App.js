@@ -7,6 +7,7 @@ import Improve from './components/Improve';
 import Control from './components/Control';
 import AIAssistant from './components/AIAssistant/AIAssistant';
 import UserAccountSelector from './components/UserAccountSelector';
+import ManufacturingSimulator from './components/ManufacturingSimulator';
 import { downloadReport } from './utils/reportGenerator';
 import { demoData } from './utils/demoData';
 import { 
@@ -21,6 +22,7 @@ import {
 function App() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [projectData, setProjectData] = useState({
     // Define Phase
@@ -334,6 +336,15 @@ function App() {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* User Account Selector */}
           <UserAccountSelector />
+
+          {/* Manufacturing Simulator Button */}
+          <button 
+            className={`btn-simulator ${showSimulator ? 'active' : ''}`}
+            onClick={() => setShowSimulator(s => !s)}
+            title="Toggle Manufacturing Simulator"
+          >
+            {showSimulator ? '✕ Close Simulator' : '⚙️ Simulator'}
+          </button>
           
           {/* File Menu Dropdown */}
           <div className="file-menu-container">
@@ -390,6 +401,8 @@ function App() {
           </button>
         </div>
       </header>
+
+      {showSimulator && <ManufacturingSimulator />}
 
       <div className="stepper-container">
         {steps.map((step, index) => (
