@@ -772,10 +772,7 @@ const ManufacturingSimulator = () => {
                   {/* Percent Complete Indicator */}
                   <div className="percent-complete-container">
                     <label className="percent-complete-label">% Complete:</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
+                    <select
                       className="percent-complete-input"
                       value={box.percentComplete || 0}
                       onChange={(e) => {
@@ -784,7 +781,19 @@ const ManufacturingSimulator = () => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                       disabled={isSimulationStopped}
-                    />
+                    >
+                      <option value="0">0%</option>
+                      <option value="10">10%</option>
+                      <option value="20">20%</option>
+                      <option value="30">30%</option>
+                      <option value="40">40%</option>
+                      <option value="50">50%</option>
+                      <option value="60">60%</option>
+                      <option value="70">70%</option>
+                      <option value="80">80%</option>
+                      <option value="90">90%</option>
+                      <option value="100">100%</option>
+                    </select>
                     <div className="percent-complete-bar">
                       <div 
                         className="percent-complete-fill"
