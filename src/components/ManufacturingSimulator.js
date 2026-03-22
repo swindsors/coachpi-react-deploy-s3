@@ -187,7 +187,8 @@ const ManufacturingSimulator = () => {
         statusReason: '',
         defectCount: 0,
         defects: [], // Array to store defect details
-        andonPulls: 0 // Track number of times Andon was pulled
+        andonPulls: 0, // Track number of times Andon was pulled
+        percentComplete: 0 // User-editable completion percentage
       }]
     }));
   };
@@ -373,6 +374,31 @@ const ManufacturingSimulator = () => {
             ...box,
             defectCount: box.defectCount - 1,
             defects: updatedDefects
+          };
+        }
+        return box;
+      });
+      
+      return {
+        ...prev,
+        [stationKey]: updatedStation
+      };
+    });
+  };
+
+  // Update percent complete
+  const handlePercentCompleteChange = (boxId, stationKey, newPercent) => {
+    if (isSimulationStopped) return;
+    
+    // Ensure value is between 0 and 100
+    const validPercent = Math.max(0, Math.min(100, parseInt(newPercent) || 0));
+    
+    setStations((prev) => {
+      const updatedStation = prev[stationKey].map(box => {
+        if (box.id === boxId) {
+          return {
+            ...box,
+            percentComplete: validPercent
           };
         }
         return box;
@@ -741,6 +767,30 @@ const ManufacturingSimulator = () => {
                     >
                       +
                     </button>
+                  </div>
+                  
+                  {/* Percent Complete Indicator */}
+                  <div className="percent-complete-container">
+                    <label className="percent-complete-label">% Complete:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      className="percent-complete-input"
+                      value={box.percentComplete || 0}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handlePercentCompleteChange(box.id, stationKey, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isSimulationStopped}
+                    />
+                    <div className="percent-complete-bar">
+                      <div 
+                        className="percent-complete-fill"
+                        style={{ width: `${box.percentComplete || 0}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               );
