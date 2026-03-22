@@ -592,8 +592,8 @@ const ManufacturingSimulator = () => {
   return (
     <div className="simulator-container">
       <div className="simulator-header">
-        <h2>Manufacturing Line Simulator</h2>
-        <p className="simulator-description">Drag and drop boxes between stations to simulate a manufacturing process</p>
+        <h2>Visual Factory</h2>
+        <p className="simulator-description">Drag and drop sections between stations to visualize your manufacturing process</p>
       </div>
 
       <div className="control-buttons">
